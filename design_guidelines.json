@@ -1,0 +1,135 @@
+{
+  "theme": {
+    "name": "Light Theme (Swiss & High-Contrast)",
+    "archetype": "Archetype 4 (Swiss & High-Contrast)",
+    "description": "Authority, clarity, and truth. Objective, rigid, and function-first. Linear/Attio level of polish. A clean, data-dense interface tailored for back-office and energy consultants. Neutral grayscale base with precise, high-contrast structural borders. Accents are used exclusively for semantic meaning and alerts.",
+    "colors": {
+      "background": {
+        "page": "bg-[#FAFAFA]",
+        "surface": "bg-white",
+        "surface_hover": "bg-zinc-100",
+        "surface_secondary": "bg-zinc-50"
+      },
+      "text": {
+        "primary": "text-zinc-950",
+        "secondary": "text-zinc-500",
+        "tertiary": "text-zinc-400",
+        "inverse": "text-white"
+      },
+      "borders": {
+        "default": "border-zinc-200",
+        "focus": "border-zinc-900",
+        "divider": "border-zinc-100"
+      },
+      "brand": {
+        "primary": "bg-zinc-950 text-white",
+        "primary_hover": "bg-zinc-800 text-white",
+        "accent": "text-[#F97316]",
+        "accent_bg": "bg-[#F97316]/10",
+        "success": "text-emerald-600 bg-emerald-50",
+        "warning": "text-amber-600 bg-amber-50",
+        "error": "text-rose-600 bg-rose-50"
+      },
+      "crm_states": {
+        "nuevo_lead": "bg-blue-50 text-blue-700 border-blue-200",
+        "pendiente_estudio": "bg-amber-50 text-amber-700 border-amber-200",
+        "enviado": "bg-purple-50 text-purple-700 border-purple-200",
+        "renovacion": "bg-rose-50 text-rose-700 border-rose-200",
+        "cliente_activo": "bg-emerald-50 text-emerald-700 border-emerald-200",
+        "sin_ahorro": "bg-zinc-100 text-zinc-600 border-zinc-200"
+      }
+    }
+  },
+  "typography": {
+    "strategy": "Swiss Brutalist (Tech/SaaS) - radical weight contrast. High density, extreme legibility.",
+    "fonts": {
+      "heading": "font-sans (Satoshi or General Sans via Google Fonts, fallback to system-ui)",
+      "body": "font-sans (Inter)",
+      "mono": "font-mono (JetBrains Mono) for CUPS numbers, Contracts IDs, and dates"
+    },
+    "scales": {
+      "h1": "text-3xl font-bold tracking-tight text-zinc-950",
+      "h2": "text-2xl font-semibold tracking-tight text-zinc-950",
+      "h3": "text-lg font-medium tracking-tight text-zinc-900",
+      "body": "text-sm text-zinc-600 leading-relaxed",
+      "small": "text-xs text-zinc-500",
+      "label": "text-[11px] uppercase tracking-[0.05em] font-semibold text-zinc-400"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Control Room Grid Protocol. Density, Data Correlation, Scanability.",
+    "grid": {
+      "base": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+      "gap": "gap-4 md:gap-6",
+      "widget_summary": "col-span-1",
+      "widget_main": "col-span-2 lg:col-span-3",
+      "sidebar_width": "w-64 border-r border-zinc-200"
+    },
+    "padding": {
+      "container": "p-6 md:p-8",
+      "card": "p-4 md:p-5",
+      "dense_table_cell": "px-3 py-2"
+    },
+    "borders_and_radius": {
+      "radius": "rounded-md",
+      "card_style": "bg-white border border-zinc-200 shadow-sm",
+      "input_style": "rounded-md border border-zinc-200 shadow-sm focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900",
+      "button_radius": "rounded-md"
+    }
+  },
+  "components": {
+    "libraries": [
+      "shadcn/ui",
+      "lucide-react",
+      "recharts",
+      "@hello-pangea/dnd (for Kanban drag-and-drop)",
+      "date-fns",
+      "sonner (Toasts)"
+    ],
+    "customizations": {
+      "cards": "Avoid heavily styled cards. Use flat, rectangular, dense styles with 1px zinc-200 borders.",
+      "tables": "Dense. Header rows with zinc-50 bg, very subtle borders. Use JetBrains mono for CUPS and numeric data.",
+      "badges": "Flat background colors (e.g. emerald-50), no heavy shadows, small font sizes (text-[11px] uppercase).",
+      "kanban_board": "Horizontal scrolling container. Columns (states) have a subtle gray background (bg-zinc-50), inner cards are pure white with 1px border. Drag indicator on hover.",
+      "ocr_upload_zone": "Dashed border (border-zinc-300), bg-zinc-50 hover:bg-zinc-100 transition-colors, centered Lucide upload icon."
+    }
+  },
+  "interaction_and_motion": {
+    "hover_states": "Crisp transitions. hover:bg-zinc-50 on list items. hover:-translate-y-[1px] on kanban cards.",
+    "focus_states": "focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 (accessible focus rings).",
+    "motion": "Minimalist. Framer motion only for layout transitions (like moving a kanban card) or opening modals."
+  },
+  "testing": {
+    "requirements": "All interactive elements MUST have a data-testid attribute in kebab-case, role-based.",
+    "examples": [
+      "data-testid='login-submit-button'",
+      "data-testid='kanban-card-{deal-id}'",
+      "data-testid='upload-invoice-dropzone'",
+      "data-testid='sidebar-nav-crm'"
+    ]
+  },
+  "media_and_assets": {
+    "logo_url": "https://customer-assets.emergentagent.com/job_06ee00f7-3a1e-4045-8f42-851633a7dd17/artifacts/stjqi0ne_LOGO_algomasqueluz_NEW.pdf",
+    "login_background": "https://static.prod-images.emergentagent.com/jobs/06ee00f7-3a1e-4045-8f42-851633a7dd17/images/bb706e28a74a01bb364ef0ccdfcb2cf14e612307fa4a27d40a03cdb5dff78aa6.png",
+    "avatars": [
+      "https://images.unsplash.com/photo-1713947507130-227586ab3024?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjBvZmZpY2UlMjB3b3JrZXIlMjBhdmF0YXJ8ZW58MHx8fHwxNzc5MTM5MDY5fDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1576533247967-79124db83e48?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBvZmZpY2UlMjB3b3JrZXIlMjBhdmF0YXJ8ZW58MHx8fHwxNzc5MTM5MDY5fDA&ixlib=rb-4.1.0&q=85"
+    ]
+  },
+  "pages_and_views": {
+    "auth": "Split screen layout. Left: Login form, very minimal. Right: The abstract 'light' generated background.",
+    "dashboard_home": "Executive view. Top KPI strip (Active Clients, Month Renewals, New Leads, Conversion Rate). Middle: Quick Alerts/Renovations. Bottom: Recent Pipeline changes.",
+    "crm_pipeline": "Kanban view. Top bar: Filters (commercial, date). Board: Columns for states (Nuevo Lead -> ... -> Cliente Activo).",
+    "client_detail": "Progressive disclosure. Header: Name, CUPS, Status. Tabs: Details, Contracts, Documents (Invoices/OCR), History.",
+    "contracts": "Data-dense table view. Sorted by upcoming renewal dates. Badges for priority/status."
+  },
+  "instructions_to_main_agent": [
+    "Use standard HTML+Tailwind for main layouts. Use Shadcn for complex interactives (Tables, Dialogs, Selects, Tabs).",
+    "Implement the Kanban board using a lightweight drag-and-drop library like @hello-pangea/dnd.",
+    "For the OCR extraction feature, build a clean drag-and-drop upload zone that shows an analyzing/loading state, simulating the Gemini 3 Pro OCR call.",
+    "Never use generic placeholder images. Use the provided avatar URLs for users/comerciales.",
+    "Implement a collapsible sidebar navigation with Lucide icons (LayoutDashboard, Users, FileText, Settings).",
+    "Ensure all buttons, inputs, and tabs have proper data-testid attributes.",
+    "To display the logo (which is a PDF), convert or use an iframe/object tag, OR rely on a stylized text logo 'AlgoMásQueLuz' using the Cabinet Grotesk/Satoshi font if the PDF cannot be rendered inline easily."
+  ]
+}
