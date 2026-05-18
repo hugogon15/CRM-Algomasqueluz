@@ -114,8 +114,8 @@ export default function Dashboard() {
               <h3 className="font-display text-base font-semibold text-zinc-950 tracking-tight">Distribución Pipeline</h3>
               <p className="text-xs text-zinc-500 mt-0.5">Clientes por estado</p>
             </div>
-            <div className="p-3 h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="p-3 h-72" style={{ minWidth: 0, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 40 }}>
                   <CartesianGrid stroke="#f4f4f5" vertical={false} />
                   <XAxis dataKey="estado" tick={{ fontSize: 10, fill: "#71717a" }} angle={-30} textAnchor="end" height={60} interval={0} />

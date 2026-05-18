@@ -335,8 +335,9 @@ async def seed_demo_data():
 @api.post("/auth/login")
 async def login(body: LoginIn, response: Response, request: Request):
     email = body.email.lower().strip()
-    ip = request.client.host if request.client else "?"
-    ident = f"{ip}:{email}"
+    # Use email-only as identifier; in production behind K8s ingress, request.client.host
+    # rotates between proxy pods so per-IP keys never accumulate. Email-only is safer here.
+    ident = f"email:{email}"
 
     # brute force
     att = await db.login_attempts.find_one({"identifier": ident})
@@ -358,7 +359,7 @@ async def login(body: LoginIn, response: Response, request: Request):
     access = create_access_token(uid, user["email"], user.get("role", "comercial"))
     refresh = create_refresh_token(uid)
     set_auth_cookies(response, access, refresh)
-    return {"user": sanitize_user(user), "access_token": access}
+    return {"user": sanitize_user(user)}
 
 @api.post("/auth/logout")
 async def logout(response: Response, user: dict = Depends(get_current_user)):
@@ -545,6 +546,14 @@ async def list_contracts(cliente_id: Optional[str] = None, user: dict = Depends(
     query = {}
     if cliente_id:
         query["cliente_id"] = cliente_id
+
+    # Comerciales can only see contracts of their own clients
+    if user["role"] == "comercial":
+        own_clients = await db.clients.find({"comercial_id": user["id"]}, {"_id": 1}).to_list(1000)
+        own_ids = [str(c["_id"]) for c in own_clients]
+        if cliente_id and cliente_id not in own_ids:
+            return []
+        query["cliente_id"] = {"$in": own_ids} if not cliente_id else cliente_id
 
     contracts = await db.contracts.find(query).sort("fecha_renovacion", 1).to_list(1000)
     cli_ids = list({c["cliente_id"] for c in contracts if c.get("cliente_id")})
