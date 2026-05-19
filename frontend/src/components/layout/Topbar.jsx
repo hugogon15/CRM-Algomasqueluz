@@ -27,7 +27,10 @@ export default function Topbar({ title, subtitle, action }) {
   const runRenewalCheck = async () => {
     try {
       const { data } = await api.post("/automations/run-renewal-check");
-      toast.success(`Automatización ejecutada — ${data.notifications_created} notificaciones`);
+      const emailMsg = data.email_provider === "resend"
+        ? ` · ${data.emails_sent} emails enviados${data.emails_failed ? `, ${data.emails_failed} fallidos` : ""}`
+        : " · email stubbed";
+      toast.success(`Automatización ejecutada — ${data.notifications_created} notificaciones${emailMsg}`);
       loadNotifs();
     } catch {
       toast.error("Error ejecutando la automatización");

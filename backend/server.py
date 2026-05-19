@@ -17,6 +17,7 @@ from typing import List, Optional, Dict, Any
 
 import bcrypt
 import jwt
+import resend
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File, Form, status
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -29,6 +30,10 @@ DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ["JWT_SECRET"]
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
@@ -882,7 +887,77 @@ async def create_notification(user_id: str, title: str, body: str, level: str = 
         "level": level, "link": link, "read": False, "created_at": now_iso(),
     })
 
+# ============ EMAIL (Resend) ============
+
+async def send_email(to: str, subject: str, html: str) -> dict:
+    """Send an email via Resend. Returns dict with status + id/error."""
+    if not RESEND_API_KEY:
+        log.info(f"[STUB-EMAIL] To: {to} | Subject: {subject}")
+        return {"status": "stub", "id": None}
+    if not to or "@" not in to:
+        return {"status": "skipped", "reason": "invalid_recipient"}
+    try:
+        params = {"from": SENDER_EMAIL, "to": [to], "subject": subject, "html": html}
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        return {"status": "sent", "id": result.get("id") if isinstance(result, dict) else None}
+    except Exception as e:
+        log.warning(f"Resend send failed to {to}: {e}")
+        return {"status": "failed", "error": str(e)}
+
+def renewal_email_html(client_name: str, comercializadora: str, fecha_renovacion: str, days: int, comercial_name: str = "tu comercial") -> str:
+    accent = "#F97316"
+    return f"""
+    <!doctype html>
+    <html><body style="margin:0;padding:0;background:#fafafa;font-family:Inter,Arial,sans-serif;color:#18181b">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fafafa;padding:32px 16px">
+        <tr><td align="center">
+          <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border:1px solid #e4e4e7;border-radius:8px;overflow:hidden">
+            <tr><td style="padding:24px 28px;border-bottom:1px solid #f4f4f5">
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="font-weight:700;font-size:14px;color:#18181b;letter-spacing:-0.01em">⚡ AlgoMásQueLuz</td>
+                <td align="right" style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#a1a1aa;font-weight:600">Renovación próxima</td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="padding:32px 28px">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:{accent};font-weight:700;margin-bottom:10px">{days} días para vencimiento</div>
+              <h1 style="font-size:22px;margin:0 0 12px 0;font-weight:700;letter-spacing:-0.01em;color:#09090b">Hola,</h1>
+              <p style="font-size:14px;line-height:1.6;color:#52525b;margin:0 0 20px 0">
+                El contrato energético de <strong style="color:#09090b">{client_name}</strong> con <strong style="color:#09090b">{comercializadora}</strong> vencerá el
+                <strong style="color:#09090b">{fecha_renovacion}</strong>.
+              </p>
+              <p style="font-size:14px;line-height:1.6;color:#52525b;margin:0 0 24px 0">
+                Quedan <strong>{days} días</strong>. Es buen momento para revisar el mercado, comparar tarifas y proponer la mejor renovación o el cambio óptimo de comercializadora.
+              </p>
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="background:#09090b;border-radius:6px">
+                  <a href="{FRONTEND_URL}/renovaciones" style="display:inline-block;padding:11px 20px;color:#fff;font-size:13px;font-weight:600;text-decoration:none">Ver renovaciones →</a>
+                </td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="padding:18px 28px;background:#fafafa;border-top:1px solid #f4f4f5;font-size:11px;color:#a1a1aa">
+              Asignado a {comercial_name} · AlgoMásQueLuz Sistema Operativo
+            </td></tr>
+          </table>
+        </td></tr>
+      </table>
+    </body></html>
+    """
+
 # ============ AUTOMATIONS (manual trigger for demo) ============
+
+@api.post("/automations/preview-renewal-email")
+async def preview_renewal_email(to: Optional[str] = None, user: dict = Depends(require_role("admin"))):
+    """Send a sample renewal email to verify Resend works. Defaults to the admin email or 'to' query param."""
+    recipient = to or user["email"]
+    html = renewal_email_html(
+        client_name="Panadería La Esquina (DEMO)",
+        comercializadora="Endesa",
+        fecha_renovacion="2026-05-27",
+        days=9,
+        comercial_name="Carlos Pérez",
+    )
+    res = await send_email(recipient, "⚡ [Preview] Renovación en 9d — Panadería La Esquina", html)
+    return {"recipient": recipient, **res}
 
 @api.post("/automations/run-renewal-check")
 async def run_renewal_check(user: dict = Depends(get_current_user)):
@@ -896,12 +971,19 @@ async def run_renewal_check(user: dict = Depends(get_current_user)):
     }).to_list(500)
 
     created = 0
+    emails_sent = 0
+    emails_failed = 0
     for c in contracts:
         cli = await db.clients.find_one({"_id": ObjectId(c["cliente_id"])})
         if not cli or not cli.get("comercial_id"):
             continue
         days = (datetime.fromisoformat(c["fecha_renovacion"]).date() - today).days
         level = "urgent" if days <= 30 else "warning"
+
+        comercial = await db.users.find_one({"_id": ObjectId(cli["comercial_id"])})
+        comercial_name = comercial.get("name", "tu comercial") if comercial else "tu comercial"
+        comercial_email = comercial.get("email", "") if comercial else ""
+
         await create_notification(
             user_id=cli["comercial_id"],
             title=f"Renovación próxima: {cli['nombre']}",
@@ -909,12 +991,35 @@ async def run_renewal_check(user: dict = Depends(get_current_user)):
             level=level,
             link=f"/clientes/{cli['_id']}",
         )
-        # STUB email/whatsapp
-        log.info(f"[STUB-EMAIL] To: {cli.get('email')} - Renovación {cli['nombre']} en {days}d")
-        log.info(f"[STUB-WHATSAPP] To: {cli.get('telefono')} - Aviso renovación")
+
+        # Email to comercial (Resend)
+        if comercial_email:
+            html = renewal_email_html(
+                client_name=cli["nombre"],
+                comercializadora=c.get("comercializadora", "?"),
+                fecha_renovacion=c["fecha_renovacion"],
+                days=days,
+                comercial_name=comercial_name,
+            )
+            subject = f"⚡ Renovación en {days}d — {cli['nombre']}"
+            res = await send_email(comercial_email, subject, html)
+            if res.get("status") == "sent":
+                emails_sent += 1
+            elif res.get("status") == "failed":
+                emails_failed += 1
+
+        # WhatsApp still stubbed
+        log.info(f"[STUB-WHATSAPP] To: {cli.get('telefono')} - Aviso renovación {cli['nombre']}")
         created += 1
 
-    return {"ok": True, "notifications_created": created, "contracts_scanned": len(contracts)}
+    return {
+        "ok": True,
+        "notifications_created": created,
+        "contracts_scanned": len(contracts),
+        "emails_sent": emails_sent,
+        "emails_failed": emails_failed,
+        "email_provider": "resend" if RESEND_API_KEY else "stub",
+    }
 
 # ============ META ============
 
