@@ -220,8 +220,7 @@ export default function ClientDetail() {
   });
 
   useEffect(() => {
-    const isNewContractRequested = searchParams.get("newContract") === "true";
-    if (client && isNewContractRequested) {
+    if (client && searchParams.get("newContract") === "true") {
       setNewContract({
         comercializadora: client.comercializadora || "",
         tarifa: client.tarifa || "2.0TD",
@@ -248,15 +247,8 @@ export default function ClientDetail() {
         relaciones: []
       });
       setContractOpen(true);
-      
-      // Remove param cleanly
-      setSearchParams(prev => {
-        const next = new URLSearchParams(prev);
-        next.delete("newContract");
-        return next;
-      }, { replace: true });
     }
-  }, [client, searchParams, setSearchParams]);
+  }, [client]);
 
   // Integration console states
   const [syncCollaborator, setSyncCollaborator] = useState("aenergetic");
