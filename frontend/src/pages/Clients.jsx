@@ -327,18 +327,18 @@ export default function Clients() {
             return (
               <div
                 key={c.id}
-                className="bg-white border border-zinc-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-3.5 relative"
+                onClick={() => navigate(`/clientes/${c.id}`)}
+                className="bg-white border border-zinc-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col gap-3.5 relative active:scale-[0.99]"
                 data-testid={`client-card-${c.id}`}
               >
                 {/* Header: Name and Status */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <Link
-                      to={`/clientes/${c.id}`}
+                    <span
                       className="font-bold text-zinc-900 hover:underline text-sm block truncate"
                     >
                       {c.nombre}
-                    </Link>
+                    </span>
                     <span className="text-[10px] text-zinc-450 font-medium block truncate mt-0.5">
                       {c.email || "Sin email"}
                     </span>
@@ -358,7 +358,8 @@ export default function Clients() {
                       </span>
                       {c.cups && (
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             navigator.clipboard.writeText(c.cups);
                             toast.success("CUPS copiado");
                           }}
@@ -375,6 +376,7 @@ export default function Clients() {
                     <span className="text-zinc-400 block font-bold text-[9px] uppercase tracking-wider">Teléfono</span>
                     <a
                       href={c.telefono ? `tel:${c.telefono}` : "#"}
+                      onClick={(e) => e.stopPropagation()}
                       className={`flex items-center gap-1.5 mt-0.5 font-bold ${
                         c.telefono ? "text-amber-500 hover:underline" : "text-zinc-500 pointer-events-none"
                       }`}
@@ -404,13 +406,10 @@ export default function Clients() {
                   <div className="text-[10px] text-zinc-500 font-medium space-y-0.5 uppercase">
                     <div>Entrada: <span className="text-zinc-700 font-bold">{formatDate(c.created_at)}</span></div>
                   </div>
-                  <Link
-                    to={`/clientes/${c.id}`}
-                    className="text-[11px] font-bold text-zinc-950 flex items-center gap-0.5 hover:text-zinc-750"
-                  >
+                  <span className="text-[11px] font-bold text-zinc-950 flex items-center gap-0.5 hover:text-zinc-750">
                     <span>Ver ficha</span>
                     <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
+                  </span>
                 </div>
               </div>
             );
@@ -440,9 +439,14 @@ export default function Clients() {
               {!loading && clients.map((c) => {
                 const s = CLIENT_STATE_MAP[c.estado];
                 return (
-                  <tr key={c.id} className="hover:bg-zinc-50/80 transition-colors" data-testid={`client-row-${c.id}`}>
-                    <td className="px-4 py-2">
-                      <Link to={`/clientes/${c.id}`} className="font-semibold text-zinc-950 hover:underline text-xs">{c.nombre}</Link>
+                  <tr
+                    key={c.id}
+                    onClick={() => navigate(`/clientes/${c.id}`)}
+                    className="hover:bg-zinc-50 cursor-pointer transition-colors"
+                    data-testid={`client-row-${c.id}`}
+                  >
+                    <td className="px-4 py-2.5">
+                      <span className="font-semibold text-zinc-950 hover:underline text-xs block">{c.nombre}</span>
                       <div className="text-[10px] text-zinc-500 mt-0.5">{c.email || "—"}</div>
                     </td>
                     <td className="px-3 py-2 font-mono text-xs text-zinc-700 tracking-tight">{c.cups || "—"}</td>
