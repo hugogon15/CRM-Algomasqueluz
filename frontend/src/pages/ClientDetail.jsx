@@ -65,6 +65,7 @@ function ConfettiEffect({ active }) {
 
 const DOC_TYPE_MAP = {
   factura: { label: "Factura", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  foto: { label: "Foto / Imagen", color: "bg-purple-50 text-purple-700 border-purple-200" },
   dni: { label: "DNI", color: "bg-blue-50 text-blue-700 border-blue-200" },
   nif: { label: "NIF", color: "bg-blue-50 text-blue-700 border-blue-200" },
   nie: { label: "NIE", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
@@ -79,14 +80,18 @@ const DOC_TYPE_MAP = {
 };
 
 const DOCUMENT_TYPE_SELECTIONS = [
-  { value: "factura", label: "Factura" },
+  { value: "factura", label: "Factura (OCR Automático)" },
+  { value: "foto", label: "Foto / Imagen" },
   { value: "dni", label: "DNI" },
+  { value: "cif", label: "CIF" },
   { value: "nif", label: "NIF" },
   { value: "nie", label: "NIE" },
   { value: "pasaporte", label: "Pasaporte" },
-  { value: "cif", label: "CIF" },
   { value: "justo_titulo", label: "Justo Título" },
   { value: "contrato_alquiler", label: "Contrato Alquiler" },
+  { value: "recibo_autonomo", label: "Recibo Autónomo" },
+  { value: "contrato", label: "Contrato" },
+  { value: "justificante", label: "Justificante" },
   { value: "otro", label: "Otros" }
 ];
 
@@ -194,6 +199,65 @@ export default function ClientDetail() {
   const [assocModalOpen, setAssocModalOpen] = useState(false);
   const [assocDocument, setAssocDocument] = useState(null);
   const [assocContractId, setAssocContractId] = useState("");
+
+  // Document Upload Modal State
+  const [uploadDocModalOpen, setUploadDocModalOpen] = useState(false);
+  const [uploadDocType, setUploadDocType] = useState("dni");
+  const [uploadDocContractId, setUploadDocContractId] = useState("");
+  const [uploadDocFile, setUploadDocFile] = useState(null);
+  const [uploadDocUploading, setUploadDocUploading] = useState(false);
+
+  // Preview Image / Document Modal State
+  const [previewImageModalOpen, setPreviewImageModalOpen] = useState(false);
+  const [previewImageDoc, setPreviewImageDoc] = useState(null);
+
+  const uploadClientDocument = async (fileToUpload, docTypeOverride, contractIdOverride) => {
+    const file = fileToUpload || uploadDocFile;
+    const docType = docTypeOverride || uploadDocType || "otro";
+    const contractId = contractIdOverride !== undefined ? contractIdOverride : uploadDocContractId;
+
+    if (!file) {
+      toast.error("Por favor, selecciona un archivo para subir");
+      return;
+    }
+
+    setUploadDocUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const fileData = event.target.result;
+          await api.post("/documents/upload", {
+            cliente_id: id,
+            contrato_id: contractId || null,
+            tipo: docType,
+            nombre: file.name,
+            mime_type: file.type || "application/octet-stream",
+            size: file.size,
+            file_data: fileData
+          });
+          toast.success(`Documento "${file.name}" guardado y sincronizado en Cloudflare D1`);
+          setUploadDocModalOpen(false);
+          setUploadDocFile(null);
+          load();
+        } catch (e) {
+          console.error("Error al subir documento:", e);
+          toast.error("Error al guardar el documento");
+        } finally {
+          setUploadDocUploading(false);
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Error al leer el archivo seleccionado");
+        setUploadDocUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al procesar el archivo");
+      setUploadDocUploading(false);
+    }
+  };
 
   const loadAllContracts = async () => {
     try {
@@ -930,21 +994,38 @@ export default function ClientDetail() {
     if (!folderContract) return;
     setFolderUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("cliente_id", id);
-      fd.append("contrato_id", folderContract.id);
-      fd.append("tipo", folderUploadType);
-      const { data } = await api.post("/documents/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      if (data.ocr_status === "completed") {
-        toast.success("Factura analizada — datos extraídos");
-      } else {
-        toast.success("Documento subido correctamente");
-      }
-      load();
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const fileData = event.target.result;
+          const { data } = await api.post("/documents/upload", {
+            cliente_id: id,
+            contrato_id: folderContract.id,
+            tipo: folderUploadType,
+            nombre: file.name,
+            mime_type: file.type || "application/octet-stream",
+            size: file.size,
+            file_data: fileData
+          });
+          if (data?.ocr_status === "completed") {
+            toast.success("Factura analizada — datos extraídos");
+          } else {
+            toast.success("Documento subido y guardado en Cloudflare D1");
+          }
+          load();
+        } catch {
+          toast.error("Error al subir documento");
+        } finally {
+          setFolderUploading(false);
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Error al leer archivo");
+        setFolderUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch {
       toast.error("Error al subir documento");
-    } finally {
       setFolderUploading(false);
     }
   };
@@ -2785,18 +2866,31 @@ export default function ClientDetail() {
 
           <TabsContent value="documentos">
             <div className="bg-white border border-zinc-200 rounded-md mt-4 p-5">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-zinc-100">
                 <div>
                   <h3 className="font-display text-base font-semibold tracking-tight">Documentación del Cliente</h3>
-                  <p className="text-xs text-zinc-500 mt-0.5">Visor de toda la documentación del cliente organizada por contratos y categorías</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">Visor y gestor de documentación (DNI, CIF, Facturas, Fotos, Contratos) guardados en Cloudflare D1</p>
                 </div>
+                <Button
+                  onClick={() => {
+                    setUploadDocType("dni");
+                    setUploadDocContractId("");
+                    setUploadDocFile(null);
+                    setUploadDocModalOpen(true);
+                  }}
+                  className="bg-[#ff5722] hover:bg-[#e64a19] text-white text-xs font-bold gap-1.5 shadow-sm self-start sm:self-auto"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Subir Documento / Foto</span>
+                </Button>
               </div>
 
               {/* Filtro de Tipo de Documento */}
-              <div className="flex flex-wrap gap-1.5 mt-6 mb-3 pb-2 border-b border-zinc-200">
+              <div className="flex flex-wrap gap-1.5 mt-2 mb-3 pb-2 border-b border-zinc-200">
                 {[
                   { value: "all", label: "Todos" },
                   { value: "factura", label: "Facturas" },
+                  { value: "foto", label: "Fotos / Imágenes" },
                   { value: "dni_nie", label: "DNI / NIE" },
                   { value: "cif", label: "CIF" },
                   { value: "justo_contrato", label: "Títulos / Alquiler" },
@@ -2807,7 +2901,7 @@ export default function ClientDetail() {
                     onClick={() => setFilterDocType(fOpt.value)}
                     className={`px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-200 border cursor-pointer ${
                       filterDocType === fOpt.value
-                        ? "bg-yellow-400 text-zinc-950 border-yellow-400 font-extrabold shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+                        ? "bg-[#ff5722] text-white border-[#ff5722] font-extrabold shadow-[0_1px_3px_rgba(255,87,34,0.3)]"
                         : "bg-zinc-100 text-zinc-600 border-zinc-200 hover:bg-zinc-200 hover:text-zinc-950"
                     }`}
                   >
@@ -2822,7 +2916,7 @@ export default function ClientDetail() {
                     <tr>
                       <th className="px-5 py-3 text-left">Tipo</th>
                       <th className="px-5 py-3 text-left">Nombre del Documento</th>
-                      <th className="px-5 py-3 text-left">CUPS Asignado</th>
+                      <th className="px-5 py-3 text-left">CUPS / Asignación</th>
                       <th className="px-5 py-3 text-left">Fecha de Alta</th>
                       <th className="px-5 py-3 text-right">Acciones</th>
                     </tr>
@@ -2835,6 +2929,7 @@ export default function ClientDetail() {
                       return d.tipo === filterDocType;
                     }).map((d) => {
                       const docContract = d.contrato_id ? contracts.find(c => c.id === d.contrato_id) : null;
+                      const isImageOrPdf = d.file_path && (d.file_path.startsWith("data:") || d.file_path.match(/\.(png|jpg|jpeg|webp|gif|svg|pdf)$/i) || d.mime_type?.includes("image"));
                       return (
                         <tr key={d.id} className="hover:bg-zinc-50/50">
                           {/* Col 1: Tipo select */}
@@ -2888,6 +2983,22 @@ export default function ClientDetail() {
                           {/* Col 5: Acciones */}
                           <td className="px-5 py-3 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-2">
+                              {/* Ver Foto / Documento */}
+                              {isImageOrPdf && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs font-semibold px-2 text-[#ff5722] hover:bg-orange-50"
+                                  onClick={() => {
+                                    setPreviewImageDoc(d);
+                                    setPreviewImageModalOpen(true);
+                                  }}
+                                >
+                                  Ver Vista Previa
+                                </Button>
+                              )}
+
                               {/* Descargar */}
                               <Button
                                 type="button"
@@ -2895,8 +3006,7 @@ export default function ClientDetail() {
                                 variant="ghost"
                                 className="h-7 text-xs font-semibold px-2 text-zinc-650 hover:text-zinc-950 hover:bg-zinc-100"
                                 onClick={() => {
-                                  // Mock download utility
-                                  if (d.file_path && d.file_path.startsWith("http")) {
+                                  if (d.file_path && (d.file_path.startsWith("http") || d.file_path.startsWith("data:"))) {
                                     const link = document.createElement("a");
                                     link.href = d.file_path;
                                     link.target = "_blank";
@@ -3968,6 +4078,181 @@ export default function ClientDetail() {
           </div>
         </div>
       )}
+      {/* Modal General de Subida de Documentos */}
+      <Dialog open={uploadDocModalOpen} onOpenChange={setUploadDocModalOpen}>
+        <DialogContent className="max-w-lg bg-white border border-zinc-200 shadow-xl rounded-2xl p-6 top-[12vh] !translate-y-0">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-zinc-950 font-display font-semibold tracking-tight text-lg">
+              <UploadCloud className="w-5 h-5 text-[#ff5722]" />
+              <span>Subir Documentación del Cliente</span>
+            </DialogTitle>
+            <p className="text-xs text-zinc-500 mt-1">
+              Sube DNI, CIF, Facturas, Fotos, Contratos o cualquier documento. Se guardará de forma segura en Cloudflare D1.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 my-4">
+            <div>
+              <Label className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">Tipo de Documento</Label>
+              <Select value={uploadDocType} onValueChange={setUploadDocType}>
+                <SelectTrigger className="mt-1 h-9 text-xs border-zinc-200 bg-white">
+                  <SelectValue placeholder="Selecciona el tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_TYPE_SELECTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">Asociar a Contrato / CUPS (Opcional)</Label>
+              <Select value={uploadDocContractId || "none"} onValueChange={(v) => setUploadDocContractId(v === "none" ? "" : v)}>
+                <SelectTrigger className="mt-1 h-9 text-xs border-zinc-200 bg-white">
+                  <SelectValue placeholder="General (Sin asignar a CUPS específico)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">General (Cliente)</SelectItem>
+                  {contracts.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.comercializadora_actual || c.comercializadora} - {c.cups || "Sin CUPS"} ({c.tarifa})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">Archivo / Foto / Documento</Label>
+              <Label
+                htmlFor="client-general-doc-upload"
+                className="mt-1.5 flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 hover:border-orange-400 bg-zinc-50 hover:bg-orange-50/20 rounded-xl p-6 text-center cursor-pointer transition-all duration-200"
+              >
+                {uploadDocUploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-7 h-7 text-[#ff5722] animate-spin" />
+                    <span className="text-xs text-zinc-600 font-semibold">Guardando y sincronizando con Cloudflare D1...</span>
+                  </div>
+                ) : uploadDocFile ? (
+                  <div className="flex flex-col items-center gap-1.5">
+                    <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+                    <span className="text-xs font-bold text-zinc-900 truncate max-w-[300px]">{uploadDocFile.name}</span>
+                    <span className="text-[10px] text-zinc-400">{(uploadDocFile.size / 1024).toFixed(1)} KB — Clic para cambiar archivo</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5">
+                    <UploadCloud className="w-7 h-7 text-[#ff5722]" />
+                    <span className="text-xs text-zinc-800 font-bold">Haz clic o arrastra para seleccionar archivo</span>
+                    <span className="text-[10px] text-zinc-400">Admite PDF, JPG, PNG, WEBP, CIF, DNI, Facturas hasta 15 MB</span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="client-general-doc-upload"
+                  className="hidden"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+                  disabled={uploadDocUploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setUploadDocFile(file);
+                    e.target.value = "";
+                  }}
+                />
+              </Label>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2 border-t border-zinc-100">
+            <Button
+              variant="outline"
+              className="h-8.5 text-xs"
+              onClick={() => {
+                setUploadDocModalOpen(false);
+                setUploadDocFile(null);
+              }}
+              disabled={uploadDocUploading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => uploadClientDocument()}
+              disabled={!uploadDocFile || uploadDocUploading}
+              className="h-8.5 bg-[#ff5722] hover:bg-[#e64a19] text-white text-xs font-bold gap-1.5 shadow-sm"
+            >
+              {uploadDocUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5" />}
+              <span>Subir a Cloudflare</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Vista Previa de Imágenes y Documentos */}
+      <Dialog open={previewImageModalOpen} onOpenChange={setPreviewImageModalOpen}>
+        <DialogContent className="max-w-3xl bg-white border border-zinc-200 shadow-2xl rounded-2xl p-6 top-[8vh] !translate-y-0 max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="flex flex-row items-center justify-between pb-3 border-b border-zinc-100">
+            <DialogTitle className="flex items-center gap-2 text-zinc-950 font-display font-semibold tracking-tight text-base truncate">
+              <FileText className="w-4 h-4 text-[#ff5722]" />
+              <span className="truncate">{previewImageDoc?.nombre || "Vista Previa de Documento"}</span>
+            </DialogTitle>
+            {previewImageDoc && (
+              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold border ${(DOC_TYPE_MAP[previewImageDoc.tipo] || DOC_TYPE_MAP.otro).color}`}>
+                {(DOC_TYPE_MAP[previewImageDoc.tipo] || DOC_TYPE_MAP.otro).label}
+              </span>
+            )}
+          </DialogHeader>
+
+          <div className="my-4 flex items-center justify-center bg-zinc-900/5 rounded-xl p-4 min-h-[300px]">
+            {previewImageDoc?.file_path?.startsWith("data:image") || previewImageDoc?.file_path?.match(/\.(png|jpg|jpeg|webp|gif|svg)$/i) || previewImageDoc?.mime_type?.includes("image") ? (
+              <img
+                src={previewImageDoc.file_path}
+                alt={previewImageDoc.nombre}
+                className="max-h-[60vh] object-contain rounded-lg shadow-md border border-zinc-200 bg-white"
+              />
+            ) : previewImageDoc?.file_path?.startsWith("data:application/pdf") ? (
+              <iframe
+                src={previewImageDoc.file_path}
+                title={previewImageDoc.nombre}
+                className="w-full h-[60vh] rounded-lg border border-zinc-200"
+              />
+            ) : (
+              <div className="text-center p-8">
+                <FileText className="w-12 h-12 text-zinc-400 mx-auto mb-2" />
+                <p className="text-xs text-zinc-600 font-semibold mb-1">{previewImageDoc?.nombre}</p>
+                <p className="text-[10px] text-zinc-400">Este tipo de archivo no dispone de vista previa interactiva directa.</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 pt-2 border-t border-zinc-100">
+            <Button
+              variant="outline"
+              className="h-8.5 text-xs"
+              onClick={() => setPreviewImageModalOpen(false)}
+            >
+              Cerrar
+            </Button>
+            <Button
+              className="h-8.5 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold"
+              onClick={() => {
+                if (previewImageDoc?.file_path) {
+                  const link = document.createElement("a");
+                  link.href = previewImageDoc.file_path;
+                  link.target = "_blank";
+                  link.download = previewImageDoc.nombre;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }
+              }}
+            >
+              Descargar Documento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </>
   );

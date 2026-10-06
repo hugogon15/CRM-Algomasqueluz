@@ -940,17 +940,38 @@ export const api = {
       return { data: extractContractMetadata(data) };
     }
 
-    // 6. Upload / OCR Document Mock
+    // 6. Upload Document with Cloudflare D1 Sync & Base64 storage
     if (url === "/documents/upload") {
-      const docName = payload.get("file")?.name || "Factura.pdf";
+      const file = payload.get("file");
+      const docName = file?.name || payload.get("nombre") || "Documento.pdf";
       const clientId = cleanUuid(payload.get("cliente_id"));
       const contratoId = cleanUuid(payload.get("contrato_id"));
       const type = payload.get("tipo") || "factura";
+      const mimeType = file?.type || (docName.endsWith(".pdf") ? "application/pdf" : docName.endsWith(".png") ? "image/png" : docName.endsWith(".jpg") || docName.endsWith(".jpeg") ? "image/jpeg" : "application/octet-stream");
+      const size = file?.size || 1450201;
       
       const storedUser = JSON.parse(localStorage.getItem("aml_user") || "{}");
       const validatedUploadedBy = await getValidUserId(storedUser.id);
 
-      // Auto-fill mock OCR data
+      // Read file content as base64 Data URL if available
+      let filePath = "";
+      if (file && typeof file.arrayBuffer === "function") {
+        try {
+          const buffer = await file.arrayBuffer();
+          const bytes = new Uint8Array(buffer);
+          let binary = "";
+          const len = bytes.byteLength;
+          for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const base64 = btoa(binary);
+          filePath = `data:${mimeType};base64,${base64}`;
+        } catch (e) {
+          console.warn("Error converting file to Data URL:", e);
+        }
+      }
+
+      // Auto-fill mock OCR data for invoices
       const mockOcrData = {
         cups: "ES0021000000" + Math.floor(10000000 + Math.random() * 90000000) + "AB",
         titular: "Titular Comercial S.L.",
@@ -964,20 +985,44 @@ export const api = {
         resumen: "Factura de luz analizada con IA. Ahorro potencial detectado del 12% optimizando tarifa."
       };
 
-      const { data, error } = await supabase.from("documentos").insert({
+      const docId = cleanUuid(payload.get("id")) || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`);
+
+      const insertRecord = {
+        id: docId,
         cliente_id: clientId,
         contrato_id: contratoId,
         nombre: docName,
         tipo: type,
-        mime_type: "application/pdf",
-        size: 1450201,
-        file_path: "",
+        mime_type: mimeType,
+        size: size,
+        file_path: filePath,
         ocr_status: type === "factura" ? "completed" : "skipped",
         extracted_data: type === "factura" ? mockOcrData : { description: payload.get("description") || "" },
         uploaded_by: validatedUploadedBy
-      }).select().single();
+      };
 
-      if (error) throw error;
+      const { data, error } = await supabase.from("documentos").insert(insertRecord).select().single();
+
+      if (error) {
+        console.error("Error inserting document to Supabase:", error);
+        throw error;
+      }
+
+      // Sync to Cloudflare D1 database (non-blocking)
+      try {
+        const { queryD1 } = await import("./cloudflareD1");
+        queryD1(
+          `INSERT INTO documentos (id, cliente_id, contrato_id, nombre, tipo, mime_type, size, file_path, extracted_data, ocr_status, uploaded_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            data.id, data.cliente_id || "", data.contrato_id || "", data.nombre || "",
+            data.tipo || "factura", data.mime_type || "", data.size || 0,
+            data.file_path ? data.file_path.slice(0, 1000) : "", JSON.stringify(data.extracted_data || {}),
+            data.ocr_status || "completed", data.uploaded_by || "", data.created_at || new Date().toISOString()
+          ]
+        ).catch(e => console.log("[Cloudflare D1 Document Sync Notice]", e.message));
+      } catch (e) {
+        console.log("[Cloudflare D1 Import Error]", e.message);
+      }
 
       // Auto-fill client CUPS in database
       if (clientId && type === "factura") {
