@@ -12,9 +12,9 @@
   --popover: 0 0% 100%;
   --popover-foreground: 224 40% 9%;
   
-  /* LoadSwift / CARTO Signature Yellow Accent */
-  --primary: 48 96% 53%; /* #facc15 (Warm Yellow) */
-  --primary-foreground: 224 40% 9%;
+  /* Signature Orange Coral Accent */
+  --primary: 16 100% 60%; /* #ff5722 (Vivid Orange) */
+  --primary-foreground: 0 0% 100%;
   
   --secondary: 224 15% 94%; /* #eaecef */
   --secondary-foreground: 224 40% 9%;
@@ -27,7 +27,7 @@
   
   --border: 224 12% 90%; /* #e4e6eb */
   --input: 224 12% 93%; /* #edf0f5 */
-  --ring: 48 96% 53%;
+  --ring: 16 100% 60%;
   --radius: 1.25rem; /* Soft rounded corners matching screenshots */
 }
 
@@ -154,10 +154,10 @@ aside .text-zinc-400, aside .text-zinc-500 {
 aside a {
   transition: all 0.2s ease !important;
 }
-/* Active NavLink on black background (LoadSwift / CARTO style with warm yellow accent pill) */
+/* Active NavLink on black background (Signature Orange Accent Pill) */
 aside:not(.sidebar-expanded) a.active {
-  background-color: #facc15 !important; /* LoadSwift signature yellow accent */
-  color: #000000 !important;
+  background-color: #ff5722 !important; /* Signature Orange accent */
+  color: #ffffff !important;
   border-radius: 50% !important;
   width: 44px;
   height: 44px;
@@ -165,12 +165,12 @@ aside:not(.sidebar-expanded) a.active {
   align-items: center;
   justify-content: center;
   margin: 4px auto !important;
-  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(255, 87, 34, 0.4) !important;
   font-weight: 700 !important;
 }
 
 aside:not(.sidebar-expanded) a.active svg {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 
 aside:not(.sidebar-expanded) a:not(.active) {
@@ -200,10 +200,10 @@ aside:not(.sidebar-expanded) a:not(.active):hover svg {
   color: #ffffff !important;
 }
 
-/* Sidebar expanded states with Yellow Pill active item */
+/* Sidebar expanded states with Orange Pill active item */
 aside.sidebar-expanded a.active {
-  background-color: #facc15 !important; /* LoadSwift yellow pill */
-  color: #000000 !important;
+  background-color: #ff5722 !important; /* Signature Orange pill */
+  color: #ffffff !important;
   border-radius: 14px !important;
   width: 100% !important;
   height: 44px !important;
@@ -212,12 +212,12 @@ aside.sidebar-expanded a.active {
   justify-content: flex-start !important;
   padding: 0 16px !important;
   margin: 4px 0 !important;
-  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(255, 87, 34, 0.4) !important;
   font-weight: 800 !important;
 }
 
 aside.sidebar-expanded a.active svg {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 
 aside.sidebar-expanded a:not(.active) {

@@ -1072,107 +1072,107 @@ export default function ClientDetail() {
             )}
           </div>
         </div>
-        {/* Panel de Control del Lead */}
-        <div className="bg-zinc-950 text-white rounded-xl p-5 mb-6 border border-zinc-800 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-orange-500 to-amber-500" />
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4">
-            <h3 className="text-xs uppercase font-bold text-zinc-400 tracking-wider flex items-center gap-1.5">
+        {/* Panel de Control del Lead - Light Elegant Theme */}
+        <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 mb-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-orange-500 to-amber-500" />
+          <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
+            <h3 className="text-xs uppercase font-bold text-zinc-800 tracking-wider flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-orange-500 animate-pulse" /> Panel de Control del Lead
             </h3>
-            <span className="text-[9px] text-zinc-500 font-mono tracking-widest uppercase">Estatus General</span>
+            <span className="text-[9px] text-zinc-400 font-semibold tracking-widest uppercase">Estatus General</span>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-11 gap-3.5 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-11 gap-3 text-center">
             {/* 👤 Nombre */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">👤 Nombre</span>
-              <span className="text-[10px] font-bold truncate text-white block" title={client.nombre}>{client.nombre}</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">👤 Nombre</span>
+              <span className="text-[10px] font-bold truncate text-zinc-900 block" title={client.nombre}>{client.nombre}</span>
             </div>
 
             {/* 📞 Teléfono */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">📞 Teléfono</span>
-              <span className="text-[10px] font-bold truncate text-white block">{client.telefono ? formatPhone(client.telefono) : "—"}</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">📞 Teléfono</span>
+              <span className="text-[10px] font-bold truncate text-zinc-900 block">{client.telefono ? formatPhone(client.telefono) : "—"}</span>
             </div>
 
             {/* ✉ Email */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">✉ Email</span>
-              <span className="text-[10px] font-bold truncate text-white block" title={client.email || "—"}>{client.email || "—"}</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">✉ Email</span>
+              <span className="text-[10px] font-bold truncate text-zinc-900 block" title={client.email || "—"}>{client.email || "—"}</span>
             </div>
 
             {/* 🏢 Comercializadora */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">🏢 Comercial.</span>
-              <span className="text-[10px] font-bold truncate text-white block" title={client.comercializadora || "—"}>{client.comercializadora || "—"}</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">🏢 Comercial.</span>
+              <span className="text-[10px] font-bold truncate text-zinc-900 block" title={client.comercializadora || "—"}>{client.comercializadora || "—"}</span>
             </div>
 
             {/* ⚡ Tarifa */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">⚡ Tarifa</span>
-              <span className="text-[10px] font-bold truncate text-white block font-mono">{client.tarifa ? `${client.tipo_servicio === "gas" ? "🔥" : "💡"} ${client.tarifa}` : "—"}</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">⚡ Tarifa</span>
+              <span className="text-[10px] font-bold truncate text-zinc-900 block font-mono">{client.tarifa ? `${client.tipo_servicio === "gas" ? "🔥" : "💡"} ${client.tarifa}` : "—"}</span>
             </div>
 
             {/* 📍 Dirección Suministro */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">📍 Suministro</span>
-              <span className="text-[10px] font-bold truncate text-white block" title={client.direccion || "—"}>{client.direccion || "—"}</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">📍 Suministro</span>
+              <span className="text-[10px] font-bold truncate text-zinc-900 block" title={client.direccion || "—"}>{client.direccion || "—"}</span>
             </div>
 
             {/* 📅 Estado */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">📅 Estado</span>
-              <span className="text-[9px] font-extrabold uppercase truncate block leading-tight text-orange-400">
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">📅 Estado</span>
+              <span className="text-[9px] font-extrabold uppercase truncate block leading-tight text-orange-600">
                 {s?.label || "Nuevo Lead"}
               </span>
             </div>
 
             {/* 💰 Ahorro Estimado */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">💰 Ahorro</span>
-              <span className="text-[10px] font-bold truncate text-white block font-mono text-emerald-400">
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">💰 Ahorro</span>
+              <span className="text-[10px] font-bold truncate text-emerald-600 block font-mono">
                 {client.ahorro_estimado ? formatEUR(client.ahorro_estimado) : "—"}
               </span>
             </div>
 
             {/* 🟢 RGPD */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">🟢 RGPD</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">🟢 RGPD</span>
               {client.rgpd_aceptado ? (
-                <span className="text-[9px] font-bold text-emerald-400 flex items-center justify-center gap-0.5" title={`Firmado el ${new Date(client.rgpd_fecha).toLocaleDateString()}`}>
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" /> Aceptado
+                <span className="text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-0.5" title={client.rgpd_fecha ? `Firmado el ${new Date(client.rgpd_fecha).toLocaleDateString()}` : "Aceptado"}>
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /> Aceptado
                 </span>
               ) : (
-                <span className="text-[9px] font-bold text-amber-500 flex items-center justify-center gap-0.5 animate-pulse">
-                  <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" /> Pendiente
+                <span className="text-[9px] font-bold text-amber-600 flex items-center justify-center gap-0.5 animate-pulse">
+                  <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" /> Pendiente
                 </span>
               )}
             </div>
 
             {/* 🟢 Factura Recibida */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">🟢 Factura</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">🟢 Factura</span>
               {documents.some(doc => doc.tipo === "factura") ? (
-                <span className="text-[9px] font-bold text-emerald-400 flex items-center justify-center gap-0.5">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" /> Recibida
+                <span className="text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-0.5">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /> Recibida
                 </span>
               ) : (
-                <span className="text-[9px] font-bold text-amber-500 flex items-center justify-center gap-0.5">
-                  <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" /> Pendiente
+                <span className="text-[9px] font-bold text-amber-600 flex items-center justify-center gap-0.5">
+                  <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" /> Pendiente
                 </span>
               )}
             </div>
 
             {/* 📄 Comparativa */}
-            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-850 flex flex-col justify-between h-14">
-              <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">📄 Comparativa</span>
+            <div className="bg-zinc-50/80 p-2.5 rounded-xl border border-zinc-200/60 flex flex-col justify-between h-14">
+              <span className="text-[8px] uppercase tracking-wider text-zinc-400 font-bold block mb-0.5">📄 Comparativa</span>
               {contracts.length > 0 ? (
-                <span className="text-[9px] font-bold text-emerald-400 flex items-center justify-center gap-0.5">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" /> Generada
+                <span className="text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-0.5">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /> Generada
                 </span>
               ) : (
-                <span className="text-[9px] font-bold text-amber-500 flex items-center justify-center gap-0.5">
-                  <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" /> Pendiente
+                <span className="text-[9px] font-bold text-amber-600 flex items-center justify-center gap-0.5">
+                  <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" /> Pendiente
                 </span>
               )}
             </div>

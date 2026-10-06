@@ -65,7 +65,7 @@ export default function AppLayout({ children }) {
           <Link
             to="/dashboard"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-              isTabActive("/dashboard") ? "text-amber-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
+              isTabActive("/dashboard") ? "text-orange-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             <LayoutDashboard className="w-5 h-5" />
@@ -75,7 +75,7 @@ export default function AppLayout({ children }) {
           <Link
             to="/clientes"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-              isTabActive("/clientes") ? "text-amber-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
+              isTabActive("/clientes") ? "text-orange-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             <Users className="w-5 h-5" />
@@ -85,7 +85,7 @@ export default function AppLayout({ children }) {
           <Link
             to="/pipeline"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-              isTabActive("/pipeline") ? "text-amber-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
+              isTabActive("/pipeline") ? "text-orange-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             <Columns3 className="w-5 h-5" />
@@ -95,7 +95,7 @@ export default function AppLayout({ children }) {
           <Link
             to="/contratos"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-              isTabActive("/contratos") ? "text-amber-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
+              isTabActive("/contratos") ? "text-orange-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             <FileText className="w-5 h-5" />
@@ -105,7 +105,7 @@ export default function AppLayout({ children }) {
           <Link
             to="/renovaciones"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-              isTabActive("/renovaciones") ? "text-amber-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
+              isTabActive("/renovaciones") ? "text-orange-500 font-bold" : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             <CalendarClock className="w-5 h-5" />
