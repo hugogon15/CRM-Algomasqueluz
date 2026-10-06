@@ -220,25 +220,41 @@ export default function ClientDetail() {
   });
 
   useEffect(() => {
-    if (client && searchParams.get("newContract") === "true") {
-      // Auto-prefill from client details when creating a new contract from redirect
-      setNewContract(prev => ({
-        ...prev,
-        cups: client.cups || "",
+    const isNewContractRequested = searchParams.get("newContract") === "true";
+    if (client && isNewContractRequested) {
+      setNewContract({
+        comercializadora: client.comercializadora || "",
         tarifa: client.tarifa || "2.0TD",
+        potencia_contratada: 5.5,
+        fecha_inicio: new Date().toISOString().slice(0, 10),
+        fecha_renovacion: new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10),
+        permanencia_meses: 12,
+        importe_anual: 0,
+        notas: "",
+        comercializadora_anterior: "",
         comercializadora_actual: client.comercializadora || "",
+        empresa_colaboradora: client.colaborador || "",
+        cups: client.cups || "",
+        consumo_anual: 0,
+        estado: "pendiente_estudio",
         tipo_servicio: client.tipo_servicio || "luz",
         direccion: client.direccion || "",
         provincia: client.provincia || "",
         comision: client.comision || 0,
-        etiqueta: ""
-      }));
+        etiqueta: "",
+        fecha_fin_contrato: "",
+        fecha_alerta_personalizada: "",
+        motivo_alerta_personalizada: "",
+        relaciones: []
+      });
       setContractOpen(true);
       
-      // Clean up the parameter to prevent opening again on refresh/update
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("newContract");
-      setSearchParams(newParams, { replace: true });
+      // Remove param cleanly
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete("newContract");
+        return next;
+      }, { replace: true });
     }
   }, [client, searchParams, setSearchParams]);
 
