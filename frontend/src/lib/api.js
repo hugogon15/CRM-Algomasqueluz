@@ -518,8 +518,27 @@ export const api = {
     // 7. Client Detail Single
     if (url.startsWith("/clients/")) {
       const id = url.split("/")[2];
-      const { data, error } = await supabase.from("clientes").select("*, usuarios(name)").eq("id", id).single();
-      if (error) throw error;
+      let data = null;
+      let error = null;
+
+      try {
+        const res = await supabase.from("clientes").select("*, usuarios(name)").eq("id", id).single();
+        data = res.data;
+        error = res.error;
+      } catch (e) {
+        error = e;
+      }
+
+      if (error || !data) {
+        // Fallback query without relational join
+        const fallbackRes = await supabase.from("clientes").select("*").eq("id", id).maybeSingle();
+        if (fallbackRes.data) {
+          data = fallbackRes.data;
+        } else {
+          throw error || new Error("Cliente no encontrado");
+        }
+      }
+
       return {
         data: {
           ...extractClientMetadata(data),
