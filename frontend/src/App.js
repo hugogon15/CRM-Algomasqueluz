@@ -20,9 +20,15 @@ import ClientMap from "./pages/Map";
 import Messages from "./pages/Messages";
 import Autorizacion from "./pages/Autorizacion";
 
+import ErrorBoundary from "./components/ErrorBoundary";
+
 const guarded = (el, roles) => (
   <ProtectedRoute roles={roles}>
-    <AppLayout>{el}</AppLayout>
+    <AppLayout>
+      <ErrorBoundary>
+        {el}
+      </ErrorBoundary>
+    </AppLayout>
   </ProtectedRoute>
 );
 

@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { 
   ArrowLeft, Building2, Phone, Mail, MapPin, FileText, UploadCloud, Trash2, Save, 
   Plus, Sparkles, Loader2, CheckCircle2, X, ExternalLink, Copy, Check, RotateCw, Play, Send, AlertCircle, User, ShieldAlert, Edit2,
-  History, Folder, FolderOpen, MessageSquare, MessageCircle, Share2, FileUp
+  History, Folder, FolderOpen, MessageSquare, MessageCircle, Share2, FileUp, Zap
 } from "lucide-react";
 
 // Robust Inline Confetti Effect
