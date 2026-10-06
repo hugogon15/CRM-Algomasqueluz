@@ -248,6 +248,7 @@ export default function ClientDetail() {
       });
       setContractOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
   // Integration console states
