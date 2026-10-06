@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environment variables (SECRETS — never commit)
+.env
+backend/.env
+frontend/.env.local
+frontend/.env.production
+*.env.local
+
+# Build outputs
+frontend/build/
+frontend/dist/
+backend/dist/
+
+# Uploaded files (user-generated, can be very large)
+backend/uploads/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+
+# Test reports (local)
+test_reports/
+test-results/
+
+# Emergent internal
+.emergent/
+
+# Credentials & memory (contain test data + auth)
+memory/test_credentials.md
+auth_testing.md
+frontend/node_modules/.cache/default-development/6.pack
+frontend/node_modules/.cache/default-development/2.pack

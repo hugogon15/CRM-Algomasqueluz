@@ -1,0 +1,413 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Satoshi:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 240 10% 97%; /* Light grey-blue bg #f4f5f8 */
+  --foreground: 224 40% 9%; /* Dark carbon text #0c0d12 */
+  --card: 0 0% 100%; /* Pure white cards #ffffff */
+  --card-foreground: 224 40% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 40% 9%;
+  
+  /* LoadSwift / CARTO Signature Yellow Accent */
+  --primary: 48 96% 53%; /* #facc15 (Warm Yellow) */
+  --primary-foreground: 224 40% 9%;
+  
+  --secondary: 224 15% 94%; /* #eaecef */
+  --secondary-foreground: 224 40% 9%;
+  --muted: 224 15% 94%;
+  --muted-foreground: 224 10% 45%; /* #667085 */
+  --accent: 224 15% 94%;
+  --accent-foreground: 224 40% 9%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --border: 224 12% 90%; /* #e4e6eb */
+  --input: 224 12% 93%; /* #edf0f5 */
+  --ring: 48 96% 53%;
+  --radius: 1.25rem; /* Soft rounded corners matching screenshots */
+}
+
+/* Global transitions and base styling */
+html, body, #root {
+  height: 100%;
+  background-color: #dcdfe4; /* Grey desktop desktop background */
+  color: #0c0d12;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-attachment: fixed;
+}
+
+.font-display {
+  font-family: 'Satoshi', 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Custom styled scrollbars for light mode */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+@layer base {
+  * { 
+    @apply border-slate-200; 
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Input styling - Light theme with orange focus border */
+  input, textarea, select {
+    background-color: #f5f6f8 !important;
+    border-color: #e4e6eb !important;
+    color: #0c0d12 !important;
+    @apply text-zinc-900 placeholder-zinc-400 focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/10 transition-all rounded-lg h-10 px-3 py-2 shadow-sm;
+  }
+
+  /* Core buttons format - Pill shaped buttons */
+  button:not([role="tab"]):not([role="combobox"]), .btn-pill {
+    @apply rounded-full px-5 py-2 font-semibold text-xs tracking-wide transition-all duration-200 shadow-sm flex items-center justify-center gap-1.5 !important;
+  }
+  
+  /* Adjust specific elements natively to Orange Coral */
+  .button-primary, button.bg-zinc-950 {
+    background-color: #ff5722 !important;
+    color: #ffffff !important;
+    border: 1px solid #ff5722 !important;
+    border-radius: 9999px !important;
+    font-weight: 700 !important;
+    transition: all 0.2s ease !important;
+  }
+  .button-primary:hover, button.bg-zinc-950:hover {
+    background-color: #e64a19 !important;
+    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3) !important;
+  }
+  
+  .button-outline, button.border-zinc-200 {
+    background-color: transparent !important;
+    color: #0c0d12 !important;
+    border: 1px solid #e4e6eb !important;
+    border-radius: 9999px !important;
+    transition: all 0.2s ease !important;
+  }
+  .button-outline:hover, button.border-zinc-200:hover {
+    background-color: #f5f6f8 !important;
+    border-color: #ff5722 !important;
+  }
+}
+
+/* ==========================================
+   MINIMALIST "FOLBEE" DESIGN SYSTEM FOR CRM
+   ========================================== */
+
+/* Spacious elegant grid layout cards */
+.bg-white, .bg-white.shadow-sm, .bg-white.border.border-zinc-200, .card {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important; /* Extremely soft border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.01) !important;
+  border-radius: 24px !important;
+  color: #0c0d12 !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Card hover effect: subtle lifting and drop shadow with orange-coral glow */
+.card-hover:hover, .bg-white:hover, .card:hover, .pipeline-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 87, 34, 0.15) !important; /* Orange/coral hover border */
+  box-shadow: 0 12px 40px rgba(255, 87, 34, 0.06), 0 4px 15px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Sidebar premium black integration */
+/* Sidebar premium dark/neon integration */
+aside, aside.bg-white {
+  background-color: #09090b !important; /* Rich black background */
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+  transition: all 0.3s ease !important;
+}
+aside .border-b, aside .border-t, aside.bg-white .border-zinc-200 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Sidebar Title and user name */
+aside .text-zinc-950, aside.bg-white .text-zinc-950, aside .text-white, aside.bg-white .text-white {
+  color: #ffffff !important; /* White text */
+}
+
+/* Category headers / Subtitles */
+aside .text-zinc-400, aside .text-zinc-500 {
+  color: #a1a1aa !important; /* Zinc light gray */
+}
+
+/* NavLinks high-end styling */
+aside a {
+  transition: all 0.2s ease !important;
+}
+/* Active NavLink on black background (LoadSwift / CARTO style with warm yellow accent pill) */
+aside:not(.sidebar-expanded) a.active {
+  background-color: #facc15 !important; /* LoadSwift signature yellow accent */
+  color: #000000 !important;
+  border-radius: 50% !important;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto !important;
+  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35) !important;
+  font-weight: 700 !important;
+}
+
+aside:not(.sidebar-expanded) a.active svg {
+  color: #000000 !important;
+}
+
+aside:not(.sidebar-expanded) a:not(.active) {
+  color: #a1a1aa !important;
+  border-radius: 50% !important;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto !important;
+  opacity: 1 !important;
+}
+
+aside:not(.sidebar-expanded) a:not(.active) svg {
+  color: #a1a1aa !important;
+  opacity: 1 !important;
+}
+
+/* Hover effects on black background */
+aside:not(.sidebar-expanded) a:not(.active):hover {
+  background-color: #27272a !important; /* Dark grey hover background */
+  color: #ffffff !important;
+}
+
+aside:not(.sidebar-expanded) a:not(.active):hover svg {
+  color: #ffffff !important;
+}
+
+/* Sidebar expanded states with Yellow Pill active item */
+aside.sidebar-expanded a.active {
+  background-color: #facc15 !important; /* LoadSwift yellow pill */
+  color: #000000 !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 16px !important;
+  margin: 4px 0 !important;
+  box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35) !important;
+  font-weight: 800 !important;
+}
+
+aside.sidebar-expanded a.active svg {
+  color: #000000 !important;
+}
+
+aside.sidebar-expanded a:not(.active) {
+  color: #a1a1aa !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 16px !important;
+  margin: 4px 0 !important;
+  opacity: 1 !important;
+}
+
+aside.sidebar-expanded a:not(.active) svg {
+  color: #a1a1aa !important;
+}
+
+aside.sidebar-expanded a:not(.active):hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+aside.sidebar-expanded a:not(.active):hover svg {
+  color: #ffffff !important;
+}
+
+/* Logout button styling */
+aside [data-testid="sidebar-logout-button"] {
+  color: #ef4444 !important;
+  transition: all 0.2s ease !important;
+  border-radius: 50% !important;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+aside [data-testid="sidebar-logout-button"] svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  stroke-width: 2.5px !important;
+  fill: none !important;
+  display: inline-block !important;
+}
+
+aside [data-testid="sidebar-logout-button"]:hover {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+
+/* Top bar dark glassmorphism styling */
+.bg-white\/80 {
+  background-color: rgba(248, 249, 251, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Clean tables layout for dark mode */
+thead.bg-zinc-50, thead {
+  background-color: #f5f6f8 !important;
+  border-bottom: 1px solid #e4e6eb !important;
+}
+tr.border-b {
+  border-color: #e4e6eb !important;
+}
+tr.border-b:hover, tr:hover {
+  background-color: rgba(255, 87, 34, 0.03) !important; /* Light up on hover with coral */
+  box-shadow: inset 3px 0 0 #ff5722 !important; /* Inset orange/coral neon indicator */
+  transition: all 0.15s ease !important;
+}
+
+/* Custom styled yellow neon buttons */
+.btn-indigo-gradient {
+  background: #ff5722 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 99px !important;
+  font-weight: 700 !important;
+}
+.btn-indigo-gradient:hover {
+  opacity: 0.95 !important;
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.25) !important;
+}
+
+.btn-amber-gradient {
+  background: #ff5722 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 99px !important;
+  font-weight: 700 !important;
+}
+.btn-amber-gradient:hover {
+  opacity: 0.95 !important;
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.25) !important;
+}
+
+/* Pipeline styling */
+.pipeline-column {
+  background: #f5f6f8 !important;
+  border: 1px solid #e4e6eb !important;
+  border-radius: 20px !important;
+  padding: 14px !important;
+}
+
+.pipeline-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.015) !important;
+  border-radius: 16px !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Left accent status bar for deal cards */
+.pipeline-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--status-color, #27272a);
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+/* Top Notification Bell Pulsing Green Dot */
+.topbar-notification-dot {
+  background-color: #ff5722 !important;
+  box-shadow: 0 0 8px #ff5722 !important;
+}
+
+/* AI chat page styling fixes */
+.chat-bubble-hugo {
+  background-color: #f5f6f8 !important;
+  border: 1px solid #e4e6eb !important;
+  color: #0c0d12 !important;
+  border-radius: 16px !important;
+  border-top-left-radius: 0px !important;
+}
+
+.chat-bubble-user {
+  background-color: #ff5722 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: 16px !important;
+  border-top-right-radius: 0px !important;
+}
+
+/* ======================================================
+   GLOBAL LIGHT THEME TEXT COLORS AND BORDERS OVERRIDES
+   ====================================================== */
+.text-zinc-950, .text-zinc-900, .text-zinc-800, .text-zinc-700, .text-slate-900, .text-gray-900 {
+  color: #0c0d12 !important;
+}
+.text-zinc-650, .text-zinc-600, .text-zinc-500, .text-zinc-400, .text-slate-500, .text-gray-500 {
+  color: #667085 !important; /* Sleek grey text */
+}
+.border-zinc-200, .border-zinc-150, .border-zinc-100, .border-slate-200, .border-gray-200 {
+  border-color: #e4e6eb !important;
+}
+.bg-zinc-50, .bg-zinc-100, .bg-zinc-50\/50 {
+  background-color: #f5f6f8 !important;
+}
+
+/* Segmented Tabs overrides */
+[role="tablist"] {
+  background-color: #f5f6f8 !important;
+  border: 1px solid #e4e6eb !important;
+  border-radius: 9999px !important;
+  padding: 2px !important;
+}
+[role="tab"][data-state="active"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+}
+[role="tab"]:not([data-state="active"]) {
+  color: #667085 !important;
+}
+[role="tab"]:not([data-state="active"]):hover {
+  color: #0c0d12 !important;
+}
+

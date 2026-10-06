@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Firmas Corporativas | Algo más que Luz</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --solar-yellow: #F3B007;
+            --solar-yellow-hover: #DCA006;
+            --charcoal: #3A3E45;
+            --charcoal-dark: #2F3238;
+            --light-bg: #F8FAFC;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --border-color: #E2E8F0;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 10% 20%, rgba(243, 176, 7, 0.05) 0%, rgba(255, 255, 255, 0) 90%), #F1F5F9;
+            color: var(--text-main);
+            min-height: 100vh;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-symbol {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--solar-yellow) 0%, #FF9E00 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(243, 176, 7, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-symbol::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 70%);
+            transform: rotate(45deg);
+            animation: shine 4s infinite linear;
+        }
+
+        .logo-symbol svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .logo-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--charcoal);
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        .logo-text p {
+            font-size: 0.85rem;
+            color: var(--solar-yellow);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-premium {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-dark) 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Main Workspace Grid */
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards and Elements */
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04);
+            padding: 2.5rem;
+            transition: var(--transition);
+        }
+
+        .panel:hover {
+            box-shadow: 0 30px 60px rgba(15, 23, 42, 0.06);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--charcoal);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .panel-title svg {
+            width: 24px;
+            height: 24px;
+            color: var(--solar-yellow);
+        }
+
+        /* Forms styling */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper svg {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border-radius: 12px;
+            border: 1.5px solid var(--border-color);
+            background-color: white;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--solar-yellow);
+            box-shadow: 0 0 0 4px rgba(243, 176, 7, 0.15);
+        }
+
+        input:focus + svg {
+            color: var(--solar-yellow);
+        }
+
+        /* Toggle switches */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            border: 1.5px solid var(--border-color);
+            margin-bottom: 1.25rem;
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #CBD5E1;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        input:checked + .slider {
+            background-color: var(--solar-yellow);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Interactive Preview Panel */
+        .preview-sticky {
+            position: sticky;
+            top: 2.5rem;
+        }
+
+        .preview-container-wrapper {
+            background-color: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.02);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: #F1F5F9;
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Buttons Section */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--solar-yellow) 0%, #FF9E00 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(243, 176, 7, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(243, 176, 7, 0.35);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--charcoal);
+            color: white;
+            box-shadow: 0 8px 20px rgba(58, 62, 69, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: var(--charcoal-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(58, 62, 69, 0.25);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        /* Tips and Instructions accordion */
+        .instructions-accordion {
+            margin-top: 2rem;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--charcoal);
+            background: rgba(255,255,255,0.8);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .accordion-header:hover {
+            background: rgba(243, 176, 7, 0.05);
+        }
+
+        .accordion-header svg {
+            width: 20px;
+            height: 20px;
+            transition: var(--transition);
+        }
+
+        .accordion-header.active svg {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+            padding: 0 1.5rem;
+            background: white;
+        }
+
+        .accordion-content.open {
+            max-height: 500px;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .step-list {
+            list-style-type: none;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .step-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-list li::before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            top: 1px;
+            width: 22px;
+            height: 22px;
+            background: rgba(243, 176, 7, 0.15);
+            color: var(--solar-yellow-hover);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        /* Success Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1E293B;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .toast svg {
+            width: 20px;
+            height: 20px;
+            color: #10B981;
+        }
+
+        /* Keyframes */
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom image preview circle/square choice */
+        .photo-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Code mode hidden input helper */
+        #hidden-copy-area {
+            position: absolute;
+            left: -9999px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-section">
+                <div class="logo-symbol">
+                    <svg viewBox="0 0 24 24">
+                        <!-- Sun stylized symbol -->
+                        <path d="M12,6.5A5.5,5.5 0 1,1 6.5,12A5.5,5.5 0 0,1 12,6.5M12,2A1,1 0 0,1 13,3V4A1,1 0 0,1 12,5A1,1 0 0,1 11,4V3A1,1 0 0,1 12,2M12,19A1,1 0 0,1 13,20V21A1,1 0 0,1 12,22A1,1 0 0,1 11,21V20A1,1 0 0,1 12,19M2,12A1,1 0 0,1 3,11H4A1,1 0 0,1 5,12A1,1 0 0,1 4,13H3A1,1 0 0,1 2,12M19,12A1,1 0 0,1 20,11H21A1,1 0 0,1 22,12A1,1 0 0,1 21,13H20A1,1 0 0,1 19,12M5.64,17.29A1,1 0 0,1 6.35,17.59A1,1 0 0,1 6.35,18.99L5.64,19.7A1,1 0 0,1 4.23,19.7A1,1 0 0,1 4.23,18.29L5.64,17.29M18.36,5.64A1,1 0 0,1 19.77,5.64A1,1 0 0,1 19.77,7.05L19.06,7.76A1,1 0 0,1 17.65,7.76A1,1 0 0,1 17.65,6.35L18.36,5.64M5.64,6.71L4.23,5.3A1,1 0 0,1 5.64,3.89L7.05,5.3A1,1 0 0,1 5.64,6.71M18.36,18.36L19.77,19.77A1,1 0 0,1 18.36,21.18L16.95,19.77A1,1 0 0,1 18.36,18.36Z" />
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>ALGO MÁS QUE LUZ</h1>
+                    <p>tu gestor energético y solar</p>
+                </div>
+            </div>
+            <div class="badge-premium">
+                Generador de Firmas Corporativo Premium v2.0
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="workspace">
+            
+            <!-- Left Panel: Form -->
+            <div class="panel">
+                <div class="panel-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    Personaliza tus Datos de Contacto
+                </div>
+                
+                <form id="signature-form" oninput="updateSignature()">
+                    
+                    <!-- Selector de Estilo Visual -->
+                    <div class="form-group" style="grid-column: span 2; margin-bottom: 1.5rem;">
+                        <label for="select-estilo">Estilo Visual de la Firma</label>
+                        <div class="input-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+                            <select id="select-estilo" onchange="updateSignature()">
+                                <option value="premium" selected>✨ Tarjeta de Presentación Premium (Fondo crema suave + Borde solar)</option>
+                                <option value="classic">⚪ Firma Minimalista Clásica (Fondo blanco original)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Nombre -->
+                        <div class="form-group">
+                            <label for="input-nombre">Nombre y Apellidos</label>
+                            <div class="input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                <input type="text" id="input-nombre" value="Juan Pérez">
+                            </div>
+                        </div>
+
+                        <!-- Cargo -->
+                        <div class="form-group">
+                            <label for="input-cargo">Cargo o Departamento</label>
+                            <div class="input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <input type="text" id="input-cargo" value="DPTO. COMERCIAL">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Móvil -->
+                        <div class="form-group">
+                            <label for="input-movil">Teléfono Móvil</label>
+                            <div class="input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                <input type="text" id="input-movil" value="+34 624 476 295">
+                            </div>
+                        </div>
+
+                        <!-- Fijo -->
+                        <div class="form-group">
+                            <label for="input-fijo">Teléfono Fijo</label>
+                            <div class="input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                <input type="text" id="input-fijo" value="966 662 327">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label for="input-email">Correo Electrónico</label>
+                            <div class="input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <input type="email" id="input-email" value="estudios@algomasqueluz.com">
+                            </div>
+                        </div>
+
+                        <!-- Web -->
+                        <div class="form-group">
+                            <label for="input-web">Sitio Web</label>
+                            <div class="input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                                <input type="text" id="input-web" value="algomasqueluz.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="form-group">
+                        <label for="input-direccion">Dirección Corporativa</label>
+                        <div class="input-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <input type="text" id="input-direccion" value="C/ DOCTOR CARO, 87 BAJO · 03201 ELCHE/ALICANTE">
+                        </div>
+                    </div>
+
+                    <!-- Configuración Avanzada de Imagen -->
+                    <div class="form-group">
+                        <label for="input-avatar-url">Enlace Foto de Perfil o Logotipo</label>
+                        <div class="input-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <input type="text" id="input-avatar-url" value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200" placeholder="Inserta la URL pública de tu foto o deja por defecto">
+                        </div>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="toggle-group">
+                        <span class="toggle-label">Mostrar Foto Comercial</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-foto" checked onchange="updateSignature()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-group">
+                        <span class="toggle-label">Mostrar Banner Ahorro (Estudio Gratuito)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-banner" checked onchange="updateSignature()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Enlace del Banner personalizable -->
+                    <div class="form-group" id="group-banner-url">
+                        <label for="input-banner-url">Enlace del Banner de Ahorro</label>
+                        <div class="input-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            <input type="text" id="input-banner-url" value="https://www.algomasqueluz.com">
+                        </div>
+                    </div>
+
+                    <div class="toggle-group">
+                        <span class="toggle-label">Activar Enlace Directo a WhatsApp</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-whatsapp" checked onchange="updateSignature()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Mensaje de WhatsApp personalizable -->
+                    <div class="form-group" id="group-whatsapp-msg">
+                        <label for="input-whatsapp-msg">Mensaje predefinido de WhatsApp</label>
+                        <div class="input-wrapper">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            <input type="text" id="input-whatsapp-msg" value="¡Hola! Me pongo en contacto con vosotros a través del correo de Algo más que Luz.">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Panel: Interactive Preview & Copy -->
+            <div class="preview-sticky">
+                <div class="panel">
+                    <div class="panel-title">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        Previsualización en Tiempo Real
+                    </div>
+
+                    <!-- Visual Workspace of Signature -->
+                    <div class="preview-container-wrapper">
+                        <div class="preview-badge">Email Client Render</div>
+                        
+                        <!-- Real Table Signature inside wrapper -->
+                        <div id="signature-render-container">
+                            <!-- This will be populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Copy & Export CTA buttons -->
+                    <div class="actions-grid">
+                        <button class="btn btn-primary" onclick="copyRichTextSignature()">
+                            <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Copiar Firma
+                        </button>
+                        
+                        <button class="btn btn-secondary" onclick="copyHTMLCode()">
+                            <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Copiar HTML
+                        </button>
+                    </div>
+
+                    <!-- Accordion Help section -->
+                    <div class="instructions-accordion">
+                        <div class="accordion-header" onclick="toggleAccordion()">
+                            <span>⚙️ ¿Cómo instalar la firma en tu correo electrónico?</span>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="accordion-content" id="accordion-body">
+                            <ul class="step-list">
+                                <li data-step="1">Personaliza todos tus datos de contacto en el panel izquierdo.</li>
+                                <li data-step="2">Haz clic en el botón <strong>"Copiar Firma"</strong> (se copiará con el diseño, enlaces e imágenes en alta calidad).</li>
+                                <li data-step="3"><strong>En Gmail:</strong> Ve a Ajustes (icono de engranaje) > Ver todos los ajustes > pestaña "General" > sección "Firma". Haz clic derecho y selecciona <strong>Pegar (Ctrl+V o Cmd+V)</strong>.</li>
+                                <li data-step="4"><strong>En Outlook:</strong> Ve a Configuración > Correo > Redactar y responder > sección "Firmas de correo electrónico". Pega el contenido directamente.</li>
+                                <li data-step="5">Guarda los cambios y realiza una prueba enviándote un email a ti mismo. ¡Listo!</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hidden input to handle copy easily -->
+    <textarea id="hidden-copy-area"></textarea>
+
+    <!-- Success Floating Toast Notification -->
+    <div class="toast" id="toast">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toast-message">Firma copiada al portapapeles</span>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        // Default official logos and branding
+        const BRAND_LOGO_URL = 'https://i.ibb.co/V3J3jF0/amql-logo.png'; // Logotipo oficial subido a alta resolución o marcador
+        const BRAND_SUN_SYMBOL = 'https://i.ibb.co/nC5R0wR/sun-symbol.png'; // Sol de rayos en alta resolución
+
+        function updateSignature() {
+            const estilo = document.getElementById('select-estilo').value;
+            const nombre = document.getElementById('input-nombre').value.toUpperCase();
+            const cargo = document.getElementById('input-cargo').value.toUpperCase();
+            const movil = document.getElementById('input-movil').value;
+            const fijo = document.getElementById('input-fijo').value;
+            const email = document.getElementById('input-email').value;
+            const web = document.getElementById('input-web').value;
+            const direccion = document.getElementById('input-direccion').value;
+            const avatarUrl = document.getElementById('input-avatar-url').value;
+
+            const mostrarFoto = document.getElementById('toggle-foto').checked;
+            const mostrarBanner = document.getElementById('toggle-banner').checked;
+            const mostrarWhatsapp = document.getElementById('toggle-whatsapp').checked;
+            const whatsappMsg = document.getElementById('input-whatsapp-msg').value;
+            const bannerUrl = document.getElementById('input-banner-url').value;
+
+            // Show or hide WhatsApp message input group dynamically
+            const groupWhatsappMsg = document.getElementById('group-whatsapp-msg');
+            if (groupWhatsappMsg) {
+                if (mostrarWhatsapp) {
+                    groupWhatsappMsg.style.display = 'block';
+                } else {
+                    groupWhatsappMsg.style.display = 'none';
+                }
+            }
+
+            // Show or hide Banner URL input group dynamically
+            const groupBannerUrl = document.getElementById('group-banner-url');
+            if (groupBannerUrl) {
+                if (mostrarBanner) {
+                    groupBannerUrl.style.display = 'block';
+                } else {
+                    groupBannerUrl.style.display = 'none';
+                }
+            }
+
+            // Generate clean phone links
+            const cleanMovil = movil.replace(/[^\d+]/g, '');
+            const cleanFijo = fijo.replace(/[^\d+]/g, '');
+
+            // Determine image column source
+            let imageSourceHTML = '';
+            if (mostrarFoto && avatarUrl.trim() !== '') {
+                imageSourceHTML = `<img src="${avatarUrl}" width="90" height="90" style="width: 90px; height: 90px; border-radius: 50%; display: block; object-fit: cover; border: 3px solid #F3B007;" alt="${nombre}">`;
+            } else {
+                // Símbolo del Sol Corporativo con rayos amarillos estilizado
+                imageSourceHTML = `
+                    <div style="text-align: center;">
+                        <svg viewBox="0 0 24 24" style="width: 60px; height: 60px; fill: #F3B007; display: inline-block;">
+                            <path d="M12,6.5A5.5,5.5 0 1,1 6.5,12A5.5,5.5 0 0,1 12,6.5M12,2A1,1 0 0,1 13,3V4A1,1 0 0,1 12,5A1,1 0 0,1 11,4V3A1,1 0 0,1 12,2M12,19A1,1 0 0,1 13,20V21A1,1 0 0,1 12,22A1,1 0 0,1 11,21V20A1,1 0 0,1 12,19M2,12A1,1 0 0,1 3,11H4A1,1 0 0,1 5,12A1,1 0 0,1 4,13H3A1,1 0 0,1 2,12M19,12A1,1 0 0,1 20,11H21A1,1 0 0,1 22,12A1,1 0 0,1 21,13H20A1,1 0 0,1 19,12M5.64,17.29A1,1 0 0,1 6.35,17.59A1,1 0 0,1 6.35,18.99L5.64,19.7A1,1 0 0,1 4.23,19.7A1,1 0 0,1 4.23,18.29L5.64,17.29M18.36,5.64A1,1 0 0,1 19.77,5.64A1,1 0 0,1 19.77,7.05L19.06,7.76A1,1 0 0,1 17.65,7.76A1,1 0 0,1 17.65,6.35L18.36,5.64M5.64,6.71L4.23,5.3A1,1 0 0,1 5.64,3.89L7.05,5.3A1,1 0 0,1 5.64,6.71M18.36,18.36L19.77,19.77A1,1 0 0,1 18.36,21.18L16.95,19.77A1,1 0 0,1 18.36,18.36Z" />
+                        </svg>
+                        <div style="font-size: 11px; font-weight: bold; color: #3A3E45; margin-top: 5px; font-family: sans-serif; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.1;">Algo más<br>que Luz</div>
+                    </div>`;
+            }
+
+            // WhatsApp Business direct connection
+            let whatsappHTML = '';
+            if (mostrarWhatsapp) {
+                const waNumber = cleanMovil.replace('+', '').replace(/\s/g, '');
+                const encodedMsg = encodeURIComponent(whatsappMsg);
+                whatsappHTML = `
+                    <tr>
+                        <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                            <a href="https://wa.me/${waNumber}?text=${encodedMsg}" target="_blank" style="color: #10B981; text-decoration: none; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center;">
+                                <span style="font-size: 14px; margin-right: 4px;">💬</span> Contacto directo vía WhatsApp
+                            </a>
+                        </td>
+                    </tr>`;
+            }
+
+            // CTA Banner HTML
+            let bannerHTML = '';
+            if (mostrarBanner) {
+                if (estilo === 'premium') {
+                    bannerHTML = `
+                        <tr>
+                            <td style="padding: 5px 20px 10px 20px; font-family: sans-serif;">
+                                <div style="background-color: #FFFDF0; border: 1.5px dashed #F3B007; border-radius: 8px; padding: 12px 16px; text-align: center;">
+                                    <span style="font-size: 13px; font-weight: 700; color: #3A3E45; display: block; margin-bottom: 8px;">☀️ ¿Quieres ahorrar hasta un 70% en tu factura de luz y autoconsumo?</span>
+                                    <a href="${bannerUrl}" target="_blank" style="background-color: #F3B007; color: white; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 8px rgba(243,176,7,0.15);">📊 Solicitar Estudio Energético Gratuito</a>
+                                </div>
+                            </td>
+                        </tr>`;
+                } else {
+                    bannerHTML = `
+                        <tr>
+                            <td colspan="2" style="padding-top: 15px; font-family: sans-serif;">
+                                <div style="background-color: #FFFDF5; border: 1.5px dashed #F3B007; border-radius: 8px; padding: 12px 16px; text-align: center;">
+                                    <span style="font-size: 13px; font-weight: 700; color: #3A3E45; display: block; margin-bottom: 8px;">☀️ ¿Quieres ahorrar hasta un 70% en tu factura de luz y autoconsumo?</span>
+                                    <a href="${bannerUrl}" target="_blank" style="background-color: #F3B007; color: white; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 8px rgba(243,176,7,0.15);">📊 Solicitar Estudio Energético Gratuito</a>
+                                </div>
+                            </td>
+                        </tr>`;
+                }
+            }
+
+            // Clean address string for Google Maps search
+            const cleanDir = encodeURIComponent(direccion.replace(/\u00B7/g, ''));
+
+            // Core HTML Structure for Email Client (Universal Compatibility)
+            let template = '';
+            
+            if (estilo === 'premium') {
+                template = `
+<table cellpadding="0" cellspacing="0" border="0" width="550" style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #3A3E45; width: 550px; max-width: 550px; border-collapse: collapse; background-color: #FFFDF7; border-left: 4px solid #F3B007; border-top: 1px solid #EBEAE6; border-right: 1px solid #EBEAE6; border-bottom: 1px solid #EBEAE6; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+    <tr>
+        <td style="padding: 20px 20px 10px 20px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse;">
+                <tr>
+                    <!-- Columna Izquierda: Foto / Logo -->
+                    <td valign="middle" width="100" style="width: 100px; text-align: center; padding-right: 15px;">
+                        ${imageSourceHTML}
+                    </td>
+                    
+                    <!-- Columna Derecha: Datos -->
+                    <td valign="top" style="font-family: sans-serif; text-align: left;">
+                        <div style="font-size: 18px; font-weight: 800; color: #2F3238; margin-bottom: 2px; letter-spacing: -0.3px;">${nombre}</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #F3B007; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">${cargo}</div>
+                        
+                        <table cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; color: #4E535C; line-height: 1.45;">
+                            <!-- Teléfonos -->
+                            <tr>
+                                <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                                    <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📱</span> 
+                                    <a href="tel:${cleanMovil}" style="color: #4E535C; text-decoration: none; font-weight: 600;">${movil}</a>
+                                    ${fijo ? `<span style="color: #CBD5E1; margin: 0 6px;">|</span> <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📞</span> <a href="tel:${cleanFijo}" style="color: #4E535C; text-decoration: none; font-weight: 600;">${fijo}</a>` : ''}
+                                </td>
+                            </tr>
+                            <!-- Correo Electrónico -->
+                            <tr>
+                                <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                                    <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📧</span> 
+                                    <a href="mailto:${email}" style="color: #4E535C; text-decoration: none; font-weight: 600;">${email}</a>
+                                </td>
+                            </tr>
+                            <!-- Sitio Web -->
+                            <tr>
+                                <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                                    <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">🌐</span> 
+                                    <a href="https://${web}" target="_blank" style="color: #4E535C; text-decoration: none; font-weight: 600;">${web}</a>
+                                </td>
+                            </tr>
+                            <!-- Dirección -->
+                            <tr>
+                                <td valign="top" style="padding-bottom: 5px; font-family: sans-serif;">
+                                    <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📍</span> 
+                                    <a href="https://maps.google.com/?q=${cleanDir}" target="_blank" style="color: #4E535C; text-decoration: none; line-height: 1.35; display: inline-block;">${direccion}</a>
+                                </td>
+                            </tr>
+                            <!-- WhatsApp opcional -->
+                            ${whatsappHTML}
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    
+    <!-- CTA Banner Promocional -->
+    ${bannerHTML}
+    
+    <!-- RGPD Aviso Legal de Confidencialidad -->
+    <tr>
+        <td style="padding: 10px 20px 20px 20px; font-family: sans-serif;">
+            <div style="font-size: 8px; color: #9CA3AF; line-height: 1.35; border-top: 1px solid #EAEBEF; padding-top: 10px; text-align: justify;">
+                <strong>Nota Legal y Confidencialidad:</strong> El contenido de este mensaje es confidencial y para uso exclusivo del destinatario, bajo amparo de la LOPD-GDD 3/2018 y RGPD europeo. Si no es el destinatario, queda prohibida su copia o distribución. Si lo recibió por error, por favor notifíquelo de inmediato y elimínelo de su sistema. Responsable: Algo más que Luz, S.L. Finalidad: Gestión administrativa y envío de comunicaciones comerciales por interés legítimo. Derechos ARCO: Puede ejercer sus derechos de acceso, rectificación, supresión y oposición escribiendo a C/ Doctor Caro, 87 - 03201 Elche (Alicante), o presentar reclamación en www.aepd.es. Si no desea recibir más información comercial, escriba a ${email}.
+            </div>
+        </td>
+    </tr>
+</table>
+`;
+            } else {
+                template = `
+<table cellpadding="0" cellspacing="0" border="0" style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #3A3E45; max-width: 580px; width: 100%; border-collapse: collapse;">
+    <tr>
+        <!-- Columna Izquierda: Logo / Foto -->
+        <td valign="top" style="padding: 10px 20px 10px 0; border-right: 2.5px solid #F3B007; width: 110px; text-align: center;">
+            ${imageSourceHTML}
+        </td>
+        
+        <!-- Columna Derecha: Datos -->
+        <td valign="top" style="padding: 10px 0 10px 20px; font-family: sans-serif;">
+            <div style="font-size: 18px; font-weight: 800; color: #3A3E45; margin-bottom: 2px; letter-spacing: -0.3px;">${nombre}</div>
+            <div style="font-size: 11px; font-weight: 700; color: #F3B007; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">${cargo}</div>
+            
+            <table cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; color: #4E535C; line-height: 1.45;">
+                <!-- Teléfonos -->
+                <tr>
+                    <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                        <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📱</span> 
+                        <a href="tel:${cleanMovil}" style="color: #4E535C; text-decoration: none; font-weight: 600;">${movil}</a>
+                        ${fijo ? `<span style="color: #CBD5E1; margin: 0 6px;">|</span> <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📞</span> <a href="tel:${cleanFijo}" style="color: #4E535C; text-decoration: none; font-weight: 600;">${fijo}</a>` : ''}
+                    </td>
+                </tr>
+                <!-- Correo Electrónico -->
+                <tr>
+                    <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                        <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📧</span> 
+                        <a href="mailto:${email}" style="color: #4E535C; text-decoration: none; font-weight: 600;">${email}</a>
+                    </td>
+                </tr>
+                <!-- Sitio Web -->
+                <tr>
+                    <td valign="middle" style="padding-bottom: 5px; font-family: sans-serif;">
+                        <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">🌐</span> 
+                        <a href="https://${web}" target="_blank" style="color: #4E535C; text-decoration: none; font-weight: 600;">${web}</a>
+                    </td>
+                </tr>
+                <!-- Dirección -->
+                <tr>
+                    <td valign="top" style="padding-bottom: 5px; font-family: sans-serif;">
+                        <span style="color: #F3B007; font-weight: bold; margin-right: 4px;">📍</span> 
+                        <a href="https://maps.google.com/?q=${cleanDir}" target="_blank" style="color: #4E535C; text-decoration: none; line-height: 1.35; display: inline-block;">${direccion}</a>
+                    </td>
+                </tr>
+                <!-- WhatsApp opcional -->
+                ${whatsappHTML}
+            </table>
+        </td>
+    </tr>
+    
+    <!-- CTA Banner Promocional -->
+    ${bannerHTML}
+    
+    <!-- RGPD Aviso Legal de Confidencialidad -->
+    <tr>
+        <td colspan="2" style="padding-top: 20px; font-family: sans-serif;">
+            <div style="font-size: 8px; color: #9CA3AF; line-height: 1.35; border-top: 1px solid #E2E8F0; padding-top: 10px; text-align: justify;">
+                <strong>Nota Legal y Confidencialidad:</strong> El contenido de este mensaje es confidencial y para uso exclusivo del destinatario, bajo amparo de la LOPD-GDD 3/2018 y RGPD europeo. Si no es el destinatario, queda prohibida su copia o distribución. Si lo recibió por error, por favor notifíquelo de inmediato y elimínelo de su sistema. Responsable: Algo más que Luz, S.L. Finalidad: Gestión administrativa y envío de comunicaciones comerciales por interés legítimo. Derechos ARCO: Puede ejercer sus derechos de acceso, rectificación, supresión y oposición escribiendo a C/ Doctor Caro, 87 - 03201 Elche (Alicante), o presentar reclamación en www.aepd.es. Si no desea recibir más información comercial, escriba a ${email}.
+            </div>
+        </td>
+    </tr>
+</table>
+`;
+            }
+
+            document.getElementById('signature-render-container').innerHTML = template;
+        }
+
+        // Action: Copy signature as Rich Text Format (RTF / HTML formatted)
+        function copyRichTextSignature() {
+            const container = document.getElementById('signature-render-container');
+            
+            // Create range and select
+            const range = document.createRange();
+            range.selectNode(container);
+            
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            try {
+                // Copy selected formatted text
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("¡Firma copiada correctamente! Lista para pegar en Outlook o Gmail.");
+                } else {
+                    showToast("Error al copiar. Por favor, selecciona y copia manualmente.", true);
+                }
+            } catch (err) {
+                showToast("Navegador no compatible. Copia el código HTML de al lado.", true);
+            }
+            selection.removeAllRanges(); // Clear selection
+        }
+
+        // Action: Copy signature as HTML raw source code
+        function copyHTMLCode() {
+            const container = document.getElementById('signature-render-container');
+            const hiddenArea = document.getElementById('hidden-copy-area');
+            
+            hiddenArea.value = container.innerHTML.trim();
+            hiddenArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast("¡Código HTML de la firma copiado en portapapeles!");
+            } catch (err) {
+                showToast("Error al copiar código HTML.", true);
+            }
+        }
+
+        // Toast Notification system
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            
+            toastMsg.innerText = message;
+            if (isError) {
+                toast.style.background = '#EF4444';
+            } else {
+                toast.style.background = '#1E293B';
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // Accordion functionality
+        function toggleAccordion() {
+            const header = document.querySelector('.accordion-header');
+            const body = document.getElementById('accordion-body');
+            
+            header.classList.toggle('active');
+            body.classList.toggle('open');
+        }
+
+        // Initialize signature on startup
+        window.onload = function() {
+            updateSignature();
+        };
+    </script>
+</body>
+</html>

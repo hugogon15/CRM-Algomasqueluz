@@ -1,0 +1,16 @@
+[Unit]
+Description=WhatsApp Web QR Microservice AlgoMásQueLuz CRM
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/home/algomasqueluz/whatsapp-service
+ExecStart=/usr/bin/env node index.js
+Restart=always
+RestartSec=5
+Environment=PORT=8002
+Environment=NODE_ENV=production
+Environment=WHATSAPP_SERVICE_SECRET=aml-wa-web-gateway-key-2026-xyz-secret
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS AMQL | Stitch & Romer Analytics Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;750;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#030712',
+                            card: '#0f172a',
+                            border: '#1e293b',
+                            accent: '#F97316', // Orange
+                            yellow: '#FBBF24', // Yellow
+                            blue: '#3B82F6', // Blue
+                            success: '#10B981', // Emerald
+                            warning: '#F59E0B', // Amber
+                            error: '#EF4444', // Red
+                            glow: 'rgba(251, 191, 36, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/css">
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #f3f4f6;
+        }
+        .display-font {
+            font-family: 'Manrope', sans-serif;
+        }
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030712;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        /* Glow animations */
+        .glow-hover:hover {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.4);
+        }
+        .glow-success:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="h-full overflow-hidden flex flex-col antialiased">
+
+    <!-- TOPBAR -->
+    <header class="glass-panel h-16 shrink-0 border-b border-zinc-800/80 px-6 flex items-center justify-between z-30">
+        <!-- Logo/Brand -->
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center p-1.5 shadow-lg shadow-amber-500/20">
+                <i data-lucide="zap" class="text-slate-950 w-5 h-5 stroke-[2.5]"></i>
+            </div>
+            <div>
+                <span class="display-font text-sm font-bold text-white tracking-tight uppercase">AlgoMásQueLuz</span>
+                <span class="block text-[9px] font-mono text-amber-500 font-semibold tracking-widest uppercase">Stitch Romer OS v2.0</span>
+            </div>
+        </div>
+
+        <!-- Global Search & Actions -->
+        <div class="flex items-center gap-6">
+            <!-- Universal Search -->
+            <div class="relative w-80 hidden md:block">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                <input 
+                    type="text" 
+                    id="global-search" 
+                    placeholder="Buscar clientes, CUPS o contratos..." 
+                    class="w-full h-9 pl-9 pr-4 rounded-lg bg-slate-900/60 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-all"
+                    oninput="handleGlobalSearch(this.value)"
+                />
+            </div>
+
+            <!-- Notifications Center -->
+            <div class="relative">
+                <button onclick="toggleNotificationsDropdown()" class="p-2 rounded-lg hover:bg-slate-800 border border-transparent hover:border-slate-700 text-slate-400 hover:text-white transition-all relative">
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                    <span id="notif-badge" class="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-slate-950 hidden"></span>
+                </button>
+                <!-- Notif Dropdown -->
+                <div id="notif-dropdown" class="absolute right-0 mt-2 w-80 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl p-4 hidden z-50">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+                        <span class="text-xs font-bold text-white">Notificaciones Recientes</span>
+                        <button onclick="markAllNotificationsRead()" class="text-[10px] text-amber-500 hover:underline">Marcar todo leído</button>
+                    </div>
+                    <div id="notif-list" class="space-y-2.5 max-h-60 overflow-y-auto">
+                        <!-- Dynamic Notifs -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topbar Quick Action buttons -->
+            <div class="flex items-center gap-2">
+                <button onclick="openClientModal()" class="h-8 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/10">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Nuevo Cliente
+                </button>
+                <button onclick="openNoticeModal()" class="h-8 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-700 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Nuevo Aviso
+                </button>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="flex items-center gap-2.5 pl-4 border-l border-slate-800">
+                <div class="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                    <img src="https://images.unsplash.com/photo-1576533247967-79124db83e48?w=100&h=100&fit=crop&q=80" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+                <div class="hidden lg:block text-left leading-none">
+                    <span class="text-xs font-bold text-white block">Pepo Energético</span>
+                    <span class="text-[9px] font-mono text-slate-500 uppercase">Director Operaciones</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- WRAPPER -->
+    <div class="flex-1 flex min-h-0 overflow-hidden relative">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-16 md:w-56 shrink-0 border-r border-slate-800/80 bg-[#070b19]/80 flex flex-col justify-between py-6 z-25">
+            <div class="space-y-6 px-3">
+                <div class="text-[10px] uppercase font-mono tracking-widest text-slate-600 px-3 hidden md:block">Navegación</div>
+                
+                <nav class="space-y-1.5">
+                    <!-- Nav Tabs -->
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:text-white hover:bg-slate-800/50">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        <span class="text-xs font-semibold hidden md:inline">Dashboard Ejecutivo</span>
+                    </button>
+                    
+                    <button onclick="switchTab('kanban')" id="nav-kanban" class="w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:text-white hover:bg-slate-800/50">
+                        <i data-lucide="columns-3" class="w-4 h-4"></i>
+                        <span class="text-xs font-semibold hidden md:inline">Tablero Kanban</span>
+                    </button>
+
+                    <button onclick="switchTab('clientes')" id="nav-clientes" class="w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:text-white hover:bg-slate-800/50">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span class="text-xs font-semibold hidden md:inline">Cartera Clientes</span>
+                    </button>
+
+                    <button onclick="switchTab('contratos')" id="nav-contratos" class="w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:text-white hover:bg-slate-800/50">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span class="text-xs font-semibold hidden md:inline">Gestión Contratos</span>
+                    </button>
+
+                    <button onclick="switchTab('alertas')" id="nav-alertas" class="w-full h-10 px-3 rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:text-white hover:bg-slate-800/50 relative">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+                        <span class="text-xs font-semibold hidden md:inline">Avisos & Alertas</span>
+                        <span id="alerts-count-badge" class="absolute right-3 bg-rose-600/30 text-rose-400 border border-rose-500/20 text-[9px] font-bold px-1.5 py-0.2 rounded-full hidden md:inline">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Footer of Sidebar -->
+            <div class="px-3">
+                <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-850/60 hidden md:block">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold uppercase">Base de Datos OK</span>
+                    </div>
+                    <span class="text-[9px] text-slate-500 block mt-1">Conectado a Vercel Live</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT PANEL -->
+        <main class="flex-1 flex flex-col min-h-0 bg-[#030712] relative overflow-hidden">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="flex-1 overflow-y-auto p-6 space-y-6 hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="display-font text-xl font-bold tracking-tight text-white uppercase">Dashboard Ejecutivo</h2>
+                        <p class="text-xs text-slate-500">Perspectiva general de operaciones, contratos y avisos de AlgoMásQueLuz</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="runAutoRenewalCheck()" class="h-8.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition-all text-slate-200">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Ejecutar Escaneo Renovaciones (60d)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI STRIP -->
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="glass-panel p-5 rounded-xl border border-slate-800 hover:border-slate-700 hover:shadow-lg transition-all glow-hover flex flex-col gap-2">
+                        <div class="flex items-center justify-between text-slate-500">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Clientes Totales</span>
+                            <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+                        </div>
+                        <div id="kpi-total-clients" class="text-3xl font-bold display-font text-white">0</div>
+                        <span class="text-[10px] text-slate-500 leading-none">Cartera activa registrada</span>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-xl border border-slate-800 hover:border-slate-700 hover:shadow-lg transition-all glow-success flex flex-col gap-2">
+                        <div class="flex items-center justify-between text-emerald-500">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Clientes Activos</span>
+                            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+                        </div>
+                        <div id="kpi-active-clients" class="text-3xl font-bold display-font text-emerald-400">0</div>
+                        <span id="kpi-conversion-rate" class="text-[10px] text-slate-500 leading-none">0% tasa conversión</span>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-xl border border-slate-800 hover:border-slate-700 hover:shadow-lg transition-all glow-hover flex flex-col gap-2">
+                        <div class="flex items-center justify-between text-blue-500">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Nuevos Leads</span>
+                            <i data-lucide="trending-up" class="w-4 h-4 text-blue-500"></i>
+                        </div>
+                        <div id="kpi-new-leads" class="text-3xl font-bold display-font text-blue-400">0</div>
+                        <span class="text-[10px] text-slate-500 leading-none">Pendientes de estudio</span>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-xl border border-slate-800 hover:border-slate-700 hover:shadow-lg transition-all glow-hover flex flex-col gap-2">
+                        <div class="flex items-center justify-between text-amber-500">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Avisos Activos</span>
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+                        </div>
+                        <div id="kpi-active-alerts" class="text-3xl font-bold display-font text-amber-400">0</div>
+                        <span class="text-[10px] text-slate-500 leading-none">Requieren atención urgente</span>
+                    </div>
+
+                    <div class="glass-panel p-5 rounded-xl border border-slate-800 hover:border-slate-700 hover:shadow-lg transition-all glow-hover flex flex-col gap-2 col-span-2 lg:col-span-1">
+                        <div class="flex items-center justify-between text-amber-500">
+                            <span class="text-[10px] font-bold uppercase tracking-wider">Ahorro Acumulado</span>
+                            <i data-lucide="activity" class="w-4 h-4 text-amber-500"></i>
+                        </div>
+                        <div id="kpi-total-savings" class="text-2xl font-bold display-font text-amber-400 font-mono">0 €</div>
+                        <span id="kpi-savings-clients" class="text-[10px] text-slate-500 leading-none">0 clientes con ahorro</span>
+                    </div>
+                </div>
+
+                <!-- SECOND SECTION: CHARTS, ALERTS & BULLETINS -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Left: Savings and Contracts charts -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Chart Widget -->
+                        <div class="glass-panel p-5 rounded-xl border border-slate-800">
+                            <div class="flex items-center justify-between border-b border-slate-850 pb-3 mb-4">
+                                <div>
+                                    <h3 class="text-sm font-bold text-white">Análisis de Distribución Pipeline</h3>
+                                    <p class="text-[10px] text-slate-500">Clientes distribuidos por estado comercial</p>
+                                </div>
+                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-slate-500"></i>
+                            </div>
+                            <div class="h-64 relative">
+                                <canvas id="chart-pipeline-dist"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Warnings & Active Alerts Panel -->
+                        <div class="glass-panel p-5 rounded-xl border border-slate-800">
+                            <div class="flex items-center justify-between border-b border-slate-850 pb-3 mb-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-white">Alertas Operativas Críticas</h3>
+                                    <p class="text-[10px] text-slate-500">Contratos a vencer en los próximos 60 días o incidencias</p>
+                                </div>
+                                <span onclick="switchTab('alertas')" class="text-[10px] text-amber-500 hover:underline cursor-pointer flex items-center gap-0.5">Ver todo <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
+                            </div>
+                            <div id="dashboard-alerts-list" class="divide-y divide-slate-800/60 max-h-60 overflow-y-auto pr-1">
+                                <!-- Dynamic Urgent Alerts -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Bulletins board & Internal Notices (Avisos Internos) -->
+                    <div class="space-y-6">
+                        <!-- Bulletin panel -->
+                        <div class="glass-panel p-5 rounded-xl border border-slate-800 flex flex-col h-full">
+                            <div class="flex items-center justify-between border-b border-slate-850 pb-3 mb-4">
+                                <div>
+                                    <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+                                        <i data-lucide="message-square" class="w-4 h-4 text-amber-500"></i> Avisos Internos y Boletines
+                                    </h3>
+                                    <p class="text-[10px] text-slate-500">Mensajes del equipo y recordatorios en el CRM</p>
+                                </div>
+                                <button onclick="openNoticeModal()" class="p-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                            <!-- Bulletin Feed -->
+                            <div id="notice-board-list" class="space-y-3 max-h-[500px] overflow-y-auto pr-1 flex-1">
+                                <!-- Dynamic Team Notices -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: KANBAN -->
+            <div id="view-kanban" class="flex-1 flex flex-col min-h-0 hidden">
+                <!-- Header -->
+                <div class="px-6 pt-6 pb-4 flex items-center justify-between shrink-0">
+                    <div>
+                        <h2 class="display-font text-xl font-bold tracking-tight text-white uppercase">Tablero Pipeline Kanban</h2>
+                        <p class="text-xs text-slate-500">Gestiona tus leads y clientes arrastrándolos de estado para automatizar tareas</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="kanban-commercial-filter" onchange="loadKanbanBoard()" class="h-8.5 rounded-lg bg-slate-900 border border-slate-800 text-xs px-2.5 focus:outline-none focus:border-amber-500 text-slate-300">
+                            <option value="all">Filtrar por Comercial: Todos</option>
+                            <option value="1">Pepo Energético</option>
+                            <option value="2">Hugo Asesor</option>
+                            <option value="3">Belinda Gestora</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Kanban Columns scroll container -->
+                <div class="flex-1 overflow-x-auto p-6 min-h-0 flex gap-4 select-none items-start" id="kanban-columns-container">
+                    <!-- Columns generated dynamically -->
+                </div>
+            </div>
+
+            <!-- VIEW: CLIENTES -->
+            <div id="view-clientes" class="flex-1 overflow-y-auto p-6 space-y-6 hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="display-font text-xl font-bold tracking-tight text-white uppercase">Cartera de Clientes</h2>
+                        <p class="text-xs text-slate-500" id="clients-count-subtitle">0 clientes registrados en la plataforma</p>
+                    </div>
+                    <button onclick="openClientModal()" class="h-8.5 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/10">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Registrar Cliente
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-3 bg-slate-950/40 p-4 border border-slate-850/60 rounded-xl">
+                    <div class="relative flex-1 min-w-[240px]">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500"></i>
+                        <input 
+                            type="text" 
+                            id="filter-client-search" 
+                            placeholder="Buscar por nombre, CUPS, NIF, email..." 
+                            class="w-full h-9 pl-9 pr-4 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+                            oninput="loadClientsTable()"
+                        />
+                    </div>
+                    <select id="filter-client-state" onchange="loadClientsTable()" class="h-9 rounded-lg bg-slate-900 border border-slate-800 text-xs px-3 text-slate-300 focus:outline-none focus:border-amber-500">
+                        <option value="all">Todos los Estados</option>
+                        <option value="nuevo_lead">Nuevo Lead</option>
+                        <option value="pendiente_estudio">Pendiente Estudio</option>
+                        <option value="enviado_firma">Enviado a firma</option>
+                        <option value="pendiente_activacion">Pendiente Activación</option>
+                        <option value="cliente_activo">Cliente Activo</option>
+                        <option value="sin_ahorro">Sin ahorro</option>
+                    </select>
+                    <select id="filter-client-commercial" onchange="loadClientsTable()" class="h-9 rounded-lg bg-slate-900 border border-slate-800 text-xs px-3 text-slate-300 focus:outline-none focus:border-amber-500">
+                        <option value="all">Todos los Comerciales</option>
+                        <option value="1">Pepo Energético</option>
+                        <option value="2">Hugo Asesor</option>
+                        <option value="3">Belinda Gestora</option>
+                    </select>
+                    <button onclick="clearClientsFilters()" class="h-9 px-3 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-xs text-slate-400 hover:text-white transition-all flex items-center gap-1">
+                        <i data-lucide="filter-x" class="w-3.5 h-3.5"></i> Limpiar
+                    </button>
+                </div>
+
+                <!-- Clients Table Grid -->
+                <div class="glass-panel rounded-xl border border-slate-800/80 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-[#090e22] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="px-5 py-3.5">Cliente / Titular</th>
+                                    <th class="px-3 py-3.5">CUPS</th>
+                                    <th class="px-3 py-3.5">Contacto</th>
+                                    <th class="px-3 py-3.5">Dirección / Suministro</th>
+                                    <th class="px-3 py-3.5 text-center">Estado CRM</th>
+                                    <th class="px-3 py-3.5">Comercial</th>
+                                    <th class="px-3 py-3.5 text-right">Ahorro Est.</th>
+                                    <th class="px-5 py-3.5 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-rows" class="divide-y divide-slate-800/50">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CONTRATOS -->
+            <div id="view-contratos" class="flex-1 overflow-y-auto p-6 space-y-6 hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="display-font text-xl font-bold tracking-tight text-white uppercase">Gestión de Contratos</h2>
+                        <p class="text-xs text-slate-500" id="contracts-count-subtitle">0 contratos registrados y supervisados</p>
+                    </div>
+                    <button onclick="openNewContractModal()" class="h-8.5 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/10">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Crear Contrato
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap items-center gap-3 bg-slate-950/40 p-4 border border-slate-850/60 rounded-xl">
+                    <div class="relative flex-1 min-w-[240px]">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500"></i>
+                        <input 
+                            type="text" 
+                            id="filter-contract-search" 
+                            placeholder="Buscar contratos por comercializadora, cliente o tarifa..." 
+                            class="w-full h-9 pl-9 pr-4 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+                            oninput="loadContractsTable()"
+                        />
+                    </div>
+                    <select id="filter-contract-comercializadora" onchange="loadContractsTable()" class="h-9 rounded-lg bg-slate-900 border border-slate-800 text-xs px-3 text-slate-300 focus:outline-none focus:border-amber-500">
+                        <option value="all">Todas las Compañías</option>
+                        <option value="Endesa">Endesa</option>
+                        <option value="Iberdrola">Iberdrola</option>
+                        <option value="Naturgy">Naturgy</option>
+                        <option value="Repsol">Repsol</option>
+                        <option value="TotalEnergies">TotalEnergies</option>
+                        <option value="EDP">EDP</option>
+                        <option value="Holaluz">Holaluz</option>
+                        <option value="Audax">Audax</option>
+                        <option value="Octopus Energy">Octopus Energy</option>
+                    </select>
+                    <button onclick="clearContractsFilters()" class="h-9 px-3 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-xs text-slate-400 hover:text-white transition-all flex items-center gap-1">
+                        <i data-lucide="filter-x" class="w-3.5 h-3.5"></i> Limpiar
+                    </button>
+                </div>
+
+                <!-- Contracts Table Grid -->
+                <div class="glass-panel rounded-xl border border-slate-800/80 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-[#090e22] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="px-5 py-3.5">Cliente Titular</th>
+                                    <th class="px-3 py-3.5">Comercializadora</th>
+                                    <th class="px-3 py-3.5 text-center">Tarifa</th>
+                                    <th class="px-3 py-3.5 text-right">Potencia (kW)</th>
+                                    <th class="px-3 py-3.5">Fecha Inicio</th>
+                                    <th class="px-3 py-3.5">Fecha Vencimiento</th>
+                                    <th class="px-3 py-3.5 text-right">Importe Anual</th>
+                                    <th class="px-5 py-3.5 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contracts-table-rows" class="divide-y divide-slate-800/50">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: ALERTAS -->
+            <div id="view-alertas" class="flex-1 overflow-y-auto p-6 space-y-6 hidden">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="display-font text-xl font-bold tracking-tight text-white uppercase">Avisos y Alertas Operativas</h2>
+                        <p class="text-xs text-slate-500">Notificaciones automáticas del sistema, vencimiento de contratos y discrepancias en documentación</p>
+                    </div>
+                    <button onclick="runAutoRenewalCheck()" class="h-8.5 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/10">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Escanear Vencimientos
+                    </button>
+                </div>
+
+                <!-- Alert Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="alerts-grid">
+                    <!-- Dynamic Alerts Cards -->
+                </div>
+
+                <div id="alerts-empty-state" class="glass-panel p-10 text-center rounded-xl border border-slate-800 flex flex-col items-center justify-center gap-2 hidden">
+                    <i data-lucide="check-circle" class="w-8 h-8 text-emerald-500"></i>
+                    <h3 class="text-sm font-bold text-white">Todo en orden</h3>
+                    <p class="text-xs text-slate-500">No hay avisos ni alertas urgentes registradas en la plataforma</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- SMART INSPECTOR DRAWER SIDEBAR (SLIDING PANEL) -->
+        <div id="inspector-drawer" class="fixed inset-y-0 right-0 w-full max-w-[500px] bg-slate-950 border-l border-slate-800 shadow-2xl z-50 flex flex-col translate-x-full transition-transform duration-300 ease-out">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <span class="text-[9px] uppercase font-bold tracking-widest text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 inline-block mb-1">Ficha Inspector</span>
+                    <h3 id="inspector-client-name" class="display-font text-base font-bold text-white">Cliente</h3>
+                </div>
+                <button onclick="closeInspectorDrawer()" class="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-all">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Tabs selector -->
+            <div class="px-6 border-b border-slate-850 bg-slate-900/40 py-2.5">
+                <div class="bg-slate-950 p-0.5 h-8 w-full flex rounded-lg border border-slate-800">
+                    <button onclick="switchInspectorTab('datos')" id="inspector-tab-datos" class="flex-1 text-[10px] font-semibold py-1 rounded-md transition-all bg-slate-800 text-white">Datos Generales</button>
+                    <button onclick="switchInspectorTab('contratos')" id="inspector-tab-contratos" class="flex-1 text-[10px] font-semibold py-1 rounded-md transition-all text-slate-400 hover:text-white">Contratos</button>
+                    <button onclick="switchInspectorTab('documentos')" id="inspector-tab-documentos" class="flex-1 text-[10px] font-semibold py-1 rounded-md transition-all text-slate-400 hover:text-white">Documentos (OCR)</button>
+                </div>
+            </div>
+
+            <!-- Scrollable Content Pane -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Inspector: Datos Tab -->
+                <div id="inspector-pane-datos" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="col-span-2">
+                            <label class="text-[10px] uppercase text-slate-500 font-semibold">Razón Social / Nombre</label>
+                            <input type="text" id="edit-client-nombre" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">NIF / CIF</label>
+                          <input type="text" id="edit-client-nif" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Teléfono</label>
+                          <input type="text" id="edit-client-telefono" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div class="col-span-2">
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Email</label>
+                          <input type="text" id="edit-client-email" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div class="col-span-2">
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">CUPS Suministro</label>
+                          <input type="text" id="edit-client-cups" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 font-mono focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Tarifa por defecto</label>
+                          <input type="text" id="edit-client-tarifa" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Provincia</label>
+                          <input type="text" id="edit-client-provincia" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div class="col-span-2">
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Dirección Suministro</label>
+                          <input type="text" id="edit-client-direccion" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Estado CRM</label>
+                          <select id="edit-client-estado" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-2.5 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                              <option value="nuevo_lead">Nuevo Lead</option>
+                              <option value="pendiente_estudio">Pendiente Estudio</option>
+                              <option value="enviado_firma">Enviado a firma</option>
+                              <option value="pendiente_activacion">Pendiente Activación</option>
+                              <option value="cliente_activo">Cliente Activo</option>
+                              <option value="sin_ahorro">Sin Ahorro</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Comercial</label>
+                          <select id="edit-client-comercial" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-2.5 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                              <option value="1">Pepo Energético</option>
+                              <option value="2">Hugo Asesor</option>
+                              <option value="3">Belinda Gestora</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Ahorro Estimado (€)</label>
+                          <input type="number" id="edit-client-ahorro" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-emerald-400 font-bold mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div class="col-span-2">
+                          <label class="text-[10px] uppercase text-slate-500 font-semibold">Notas Comerciales</label>
+                          <textarea id="edit-client-notas" class="w-full min-h-[80px] rounded-lg bg-slate-900 border border-slate-800 p-2.5 text-slate-300 mt-1 focus:outline-none focus:border-amber-500"></textarea>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800 flex justify-end">
+                        <button onclick="saveInspectorClientData()" class="h-9 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all">
+                            <i data-lucide="save" class="w-3.5 h-3.5"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inspector: Contratos Tab -->
+                <div id="inspector-pane-contratos" class="space-y-4 hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-bold text-white">Contratos registrados</h4>
+                        <button onclick="openNewContractModal(true)" class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-semibold flex items-center gap-1 border border-slate-700">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Registrar Contrato
+                        </button>
+                    </div>
+                    <div id="inspector-contracts-list" class="space-y-3">
+                        <!-- Dynamic Contracts -->
+                    </div>
+                </div>
+
+                <!-- Inspector: Documentos Tab -->
+                <div id="inspector-pane-documentos" class="space-y-4 hidden">
+                    <div class="border-b border-slate-800 pb-2">
+                        <h4 class="text-xs font-bold text-white">Documentación y Facturas</h4>
+                        <p class="text-[10px] text-slate-500">Extrae datos automáticamente de facturas cargando imágenes o PDFs</p>
+                    </div>
+
+                    <!-- OCR Dragzone Mockup -->
+                    <label class="block border border-dashed border-slate-800 hover:border-slate-650 bg-slate-900/30 hover:bg-slate-900/60 p-6 text-center rounded-xl cursor-pointer transition-all">
+                        <div id="ocr-dropzone-content" class="flex flex-col items-center gap-2">
+                            <div class="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center">
+                                <i data-lucide="upload-cloud" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            <span class="text-xs font-bold text-white">Arrastra o sube factura de luz</span>
+                            <span class="text-[9px] text-slate-500 flex items-center gap-1 justify-center"><i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i> OCR con IA (Gemini 3 Pro)</span>
+                        </div>
+                        <input type="file" id="ocr-file-input" class="hidden" onchange="simulateOCRUpload(this.files[0])">
+                    </label>
+
+                    <div id="inspector-documents-list" class="space-y-2.5">
+                        <!-- Dynamic Documents list -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: CLIENTE (CREATE) -->
+        <div id="client-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-950 border border-slate-800 rounded-xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in duration-200">
+                <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                    <h3 class="display-font text-sm font-bold text-white">Nuevo Cliente Comercial</h3>
+                    <button onclick="closeClientModal()" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="p-6 grid grid-cols-2 gap-3.5 text-xs">
+                    <div class="col-span-2">
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Razón Social / Nombre Completo</label>
+                        <input type="text" id="new-client-nombre" placeholder="ej. Papelería Martínez S.L." class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">NIF / CIF</label>
+                        <input type="text" id="new-client-nif" placeholder="ej. B12345678" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Teléfono</label>
+                        <input type="text" id="new-client-telefono" placeholder="ej. +34 624 47 62 95" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Email de contacto</label>
+                        <input type="text" id="new-client-email" placeholder="ej. contacto@papeleriamartinez.es" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">CUPS Suministro</label>
+                        <input type="text" id="new-client-cups" placeholder="ej. ES00210000000000000000XX" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 font-mono focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Tarifa</label>
+                        <input type="text" id="new-client-tarifa" value="2.0TD" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Provincia</label>
+                        <input type="text" id="new-client-provincia" placeholder="ej. Alicante" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Dirección Completa</label>
+                        <input type="text" id="new-client-direccion" placeholder="ej. Carrer Dr. Caro, 87, local" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-800 flex justify-end gap-2.5">
+                    <button onclick="closeClientModal()" class="h-8.5 px-3.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancelar</button>
+                    <button onclick="saveNewClient()" class="h-8.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all">Crear Cliente</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: CONTRATO (CREATE/EDIT) -->
+        <div id="contract-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-950 border border-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in duration-200">
+                <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                    <h3 id="contract-modal-title" class="display-font text-sm font-bold text-white">Nuevo Contrato</h3>
+                    <button onclick="closeContractModal()" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="p-6 space-y-3.5 text-xs">
+                    <input type="hidden" id="modal-contract-id">
+                    <input type="hidden" id="modal-contract-from-inspector" value="false">
+                    
+                    <div id="contract-select-client-container">
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Cliente asociado</label>
+                        <select id="modal-contract-client-id" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-2.5 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                            <!-- Dynamic clients selection list -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Comercializadora</label>
+                        <select id="modal-contract-comercializadora" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-2.5 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                            <option value="Endesa">Endesa</option>
+                            <option value="Iberdrola">Iberdrola</option>
+                            <option value="Naturgy">Naturgy</option>
+                            <option value="Repsol">Repsol</option>
+                            <option value="TotalEnergies">TotalEnergies</option>
+                            <option value="EDP">EDP</option>
+                            <option value="Holaluz">Holaluz</option>
+                            <option value="Audax">Audax</option>
+                            <option value="Octopus Energy">Octopus Energy</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="text-[10px] uppercase text-slate-500 font-semibold">Tarifa</label>
+                            <input type="text" id="modal-contract-tarifa" value="2.0TD" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase text-slate-500 font-semibold">Potencia Contratada (kW)</label>
+                            <input type="number" step="0.1" id="modal-contract-potencia" value="5.5" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase text-slate-500 font-semibold">Fecha Inicio</label>
+                            <input type="date" id="modal-contract-inicio" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase text-slate-500 font-semibold">Fecha Renovación</label>
+                            <input type="date" id="modal-contract-renovacion" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Importe Anual (€)</label>
+                        <input type="number" id="modal-contract-importe" value="0" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-emerald-400 font-bold mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-800 flex justify-end gap-2.5">
+                    <button onclick="closeContractModal()" class="h-8.5 px-3.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancelar</button>
+                    <button onclick="saveContract()" class="h-8.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all" id="modal-contract-submit-btn">Guardar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: AVISO INTERNO (CREATE) -->
+        <div id="notice-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-950 border border-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in duration-200">
+                <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                    <h3 class="display-font text-sm font-bold text-white">Publicar Aviso Interno</h3>
+                    <button onclick="closeNoticeModal()" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="p-6 space-y-3.5 text-xs">
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Título del Aviso / Asunto</label>
+                        <input type="text" id="new-notice-title" placeholder="ej. Nueva campaña de tarifas" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-3 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Prioridad</label>
+                        <select id="new-notice-priority" class="w-full h-8.5 rounded-lg bg-slate-900 border border-slate-800 px-2.5 text-slate-200 mt-1 focus:outline-none focus:border-amber-500">
+                            <option value="normal">Informativo (Normal)</option>
+                            <option value="urgent">Urgente (Destacado)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 font-semibold">Contenido del Aviso</label>
+                        <textarea id="new-notice-message" placeholder="Escribe el mensaje para el equipo de asesores..." class="w-full min-h-[100px] rounded-lg bg-slate-900 border border-slate-800 p-2.5 text-slate-300 mt-1 focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-800 flex justify-end gap-2.5">
+                    <button onclick="closeNoticeModal()" class="h-8.5 px-3.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 text-xs font-semibold text-slate-400 hover:text-white transition-all">Cancelar</button>
+                    <button onclick="saveNewNotice()" class="h-8.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all">Publicar Aviso</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-6 right-6 space-y-3 z-[100]"></div>
+
+    <!-- MAIN CRM SCRIPT -->
+    <script>
+        // --- 1. LOCAL STORAGE MOCK SEEDING & UTILS ---
+        const MOCK_CLIENTS = [
+            { id: "c1", nombre: "Pepsi Embotelladora S.L.", nif: "B03991204", telefono: "616907629", email: "info@embotelladora.es", cups: "ES002100000102049594AA", tarifa: "3.0TD", direccion: "Polígono Industrial Llano de San José, Nave 12", provincia: "Alicante", estado: "cliente_activo", comercial_id: "1", tiene_ahorro: true, ahorro_estimado: 1240, notas_limpias: "Renovación automática negociada a finales de año.", sync_status: "sincronizado", sync_date: new Date().toISOString() },
+            { id: "c2", nombre: "Zapatería Calzatex", nif: "A03881903", telefono: "624476295", email: "compras@calzatex.com", cups: "ES002100000192837482BB", tarifa: "2.0TD", direccion: "Carrer Major, 45", provincia: "Alicante", estado: "nuevo_lead", comercial_id: "2", tiene_ahorro: false, ahorro_estimado: 0, notas_limpias: "Recién ingresado del formulario web. Pendiente de recopilar factura.", sync_status: "pendiente" },
+            { id: "c3", nombre: "Restaurante Elche Gourmet", nif: "B54992819", telefono: "633882910", email: "contacto@elchegourmet.es", cups: "ES002100000492019384CC", tarifa: "2.0TD", direccion: "Avenida de la Libertad, 102", provincia: "Alicante", estado: "pendiente_estudio", comercial_id: "1", tiene_ahorro: true, ahorro_estimado: 450, notas_limpias: "Estudio de optimización tarifaria solicitado por el propietario.", sync_status: "pendiente" },
+            { id: "c4", nombre: "Hotel Palmeras del Elche", nif: "A54019283", telefono: "677990011", email: "direccion@hotelpalmeras.es", cups: "ES002100000998822110DD", tarifa: "3.0TD", direccion: "Passeig de la Estació, 2", provincia: "Alicante", estado: "enviado_firma", comercial_id: "3", tiene_ahorro: true, ahorro_estimado: 3890, notas_limpias: "Propuesta enviada digitalmente. Pendiente de la firma del director ejecutivo.", sync_status: "sincronizado", sync_date: new Date().toISOString() },
+            { id: "c5", nombre: "Panificadora San Antón", nif: "B03112233", telefono: "612345678", email: "pan@sananton.es", cups: "ES002100000334455667EE", tarifa: "3.0TD", direccion: "Carrer Sant Antoni, 88", provincia: "Alicante", estado: "pendiente_activacion", comercial_id: "2", tiene_ahorro: true, ahorro_estimado: 950, notas_limpias: "Contrato firmado. Enviado a la distribuidora para la activación oficial de la tarifa.", sync_status: "pendiente" },
+            { id: "c6", nombre: "Clínica Dental Odontosalud", nif: "B54229988", telefono: "699002233", email: "administracion@odontosalud.es", cups: "ES002100000778899001FF", tarifa: "2.0TD", direccion: "Carrer Dr. Caro, 90", provincia: "Alicante", estado: "sin_ahorro", comercial_id: "3", tiene_ahorro: false, ahorro_estimado: 0, notas_limpias: "Revisado su contrato de Endesa, ya tiene los precios optimizados al máximo.", sync_status: "pendiente" }
+        ];
+
+        const MOCK_CONTRACTS = [
+            { id: "con1", cliente_id: "c1", comercializadora: "Iberdrola", tarifa: "3.0TD", potencia_contratada: 15.0, fecha_inicio: "2025-01-15", fecha_renovacion: "2026-01-15", importe_anual: 8900 },
+            { id: "con2", cliente_id: "c4", comercializadora: "Endesa", tarifa: "3.0TD", potencia_contratada: 45.0, fecha_inicio: "2025-06-10", fecha_renovacion: "2026-06-10", importe_anual: 24500 },
+            { id: "con3", cliente_id: "c5", comercializadora: "TotalEnergies", tarifa: "3.0TD", potencia_contratada: 18.0, fecha_inicio: "2025-03-22", fecha_renovacion: "2026-03-22", importe_anual: 11200 },
+            { id: "con4", cliente_id: "c1", comercializadora: "Octopus Energy", tarifa: "3.0TD", potencia_contratada: 15.0, fecha_inicio: "2026-01-16", fecha_renovacion: "2027-01-16", importe_anual: 7660 }
+        ];
+
+        const MOCK_NOTICES = [
+            { id: "n1", title: "📅 Recordatorio de reunión comercial", message: "Hoy a las 16:30 reunión de seguimiento en la sala común para repasar las nuevas comisiones de Octopus Energy.", priority: "normal", date: new Date().toLocaleDateString("es-ES"), author: "Pepo" },
+            { id: "n2", title: "⚡ Subida comisiones Octopus Energy", message: "Octopus ha actualizado sus márgenes. Se incrementa un 10% la retribución de contratos 2.0TD y 3.0TD residenciales.", priority: "urgent", date: new Date(Date.now() - 86400000).toLocaleDateString("es-ES"), author: "Hugo" },
+            { id: "n3", title: "📁 Plantillas de WhatsApp listas", message: "He cargado en la documentación los textos para propuestas de autoconsumo solar residenciales e industriales.", priority: "normal", date: new Date(Date.now() - 172800000).toLocaleDateString("es-ES"), author: "Belinda" }
+        ];
+
+        const MOCK_NOTIFICATIONS = [
+            { id: "not1", title: "Contrato firmado", message: "Zapatería Calzatex ha firmado digitalmente el contrato de Octopus.", read: false, date: "Hace 10 min" },
+            { id: "not2", title: "Estudio completado", message: "El OCR ha extraído con éxito los datos de la factura de Pepsi Embotelladora.", read: false, date: "Hace 1 hora" },
+            { id: "not3", title: "Alerta de Vencimiento", message: "El contrato de Pepsi Embotelladora S.L. vence en menos de 30 días.", read: true, date: "Hace 2 días" }
+        ];
+
+        const CRM_STATES = [
+            { value: "nuevo_lead", label: "Nuevo lead", color: "border-blue-500/30 text-blue-400 bg-blue-500/5 hover:bg-blue-500/10" },
+            { value: "pendiente_estudio", label: "Pendiente estudio", color: "border-amber-500/30 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10" },
+            { value: "enviado_firma", label: "Enviado a firma", color: "border-purple-500/30 text-purple-400 bg-purple-500/5 hover:bg-purple-500/10" },
+            { value: "pendiente_activacion", label: "Pendiente activación", color: "border-orange-500/30 text-orange-400 bg-orange-500/5 hover:bg-orange-500/10" },
+            { value: "cliente_activo", label: "Cliente Activo", color: "border-emerald-500/30 text-emerald-400 bg-emerald-50/5 hover:bg-emerald-500/10" },
+            { value: "sin_ahorro", label: "Sin ahorro", color: "border-zinc-700/60 text-zinc-400 bg-zinc-700/5 hover:bg-zinc-750/10" }
+        ];
+
+        const COMMERCIALS = {
+            "1": { name: "Pepo Energético", avatar: "https://images.unsplash.com/photo-1576533247967-79124db83e48?w=100&h=100&fit=crop&q=80" },
+            "2": { name: "Hugo Asesor", avatar: "https://images.unsplash.com/photo-1713947507130-227586ab3024?w=100&h=100&fit=crop&q=80" },
+            "3": { name: "Belinda Gestora", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&q=80" }
+        };
+
+        const COMERCIALIZADORAS_LIST = ["Endesa", "Iberdrola", "Naturgy", "Repsol", "TotalEnergies", "EDP", "Holaluz", "Audax", "Octopus Energy"];
+
+        // Seed if empty
+        if (!localStorage.getItem("clients")) localStorage.setItem("clients", JSON.stringify(MOCK_CLIENTS));
+        if (!localStorage.getItem("contracts")) localStorage.setItem("contracts", JSON.stringify(MOCK_CONTRACTS));
+        if (!localStorage.getItem("notices")) localStorage.setItem("notices", JSON.stringify(MOCK_NOTICES));
+        if (!localStorage.getItem("notifications")) localStorage.setItem("notifications", JSON.stringify(MOCK_NOTIFICATIONS));
+
+        // Getters
+        const getClients = () => JSON.parse(localStorage.getItem("clients"));
+        const getContracts = () => JSON.parse(localStorage.getItem("contracts"));
+        const getNotices = () => JSON.parse(localStorage.getItem("notices"));
+        const getNotifications = () => JSON.parse(localStorage.getItem("notifications"));
+
+        // Setters
+        const setClients = (c) => localStorage.setItem("clients", JSON.stringify(c));
+        const setContracts = (c) => localStorage.setItem("contracts", JSON.stringify(c));
+        const setNotices = (n) => localStorage.setItem("notices", JSON.stringify(n));
+        const setNotifications = (n) => localStorage.setItem("notifications", JSON.stringify(n));
+
+        // State Manager variables
+        let currentTab = "dashboard";
+        let activeInspectorClientId = null;
+        let activeInspectorTab = "datos";
+        let pipelineChartInstance = null;
+
+        // --- 2. NOTIFICATIONS & TOAST MANAGERS ---
+        function triggerToast(title, message, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `glass-panel p-4 rounded-xl border flex items-start gap-3 shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 max-w-sm ${
+                type === "success" ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-300" :
+                type === "warning" ? "border-amber-500/30 bg-amber-950/20 text-amber-300" :
+                "border-rose-500/30 bg-rose-950/20 text-rose-300"
+            }`;
+
+            const icon = type === "success" ? "check-circle" : type === "warning" ? "alert-triangle" : "x-circle";
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-5 h-5 shrink-0 ${type === "success" ? "text-emerald-400" : type === "warning" ? "text-amber-400" : "text-rose-400"}"></i>
+                <div>
+                    <h5 class="text-xs font-bold text-white leading-normal">${title}</h5>
+                    <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove("translate-y-2", "opacity-0");
+            }, 50);
+
+            // Remove after 4s
+            setTimeout(() => {
+                toast.classList.add("translate-y-2", "opacity-0");
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function toggleNotificationsDropdown() {
+            const d = document.getElementById("notif-dropdown");
+            d.classList.toggle("hidden");
+            loadNotificationsList();
+        }
+
+        function loadNotificationsList() {
+            const list = document.getElementById("notif-list");
+            const notifs = getNotifications();
+            const badge = document.getElementById("notif-badge");
+
+            const unread = notifs.filter(n => !n.read);
+            if (unread.length > 0) {
+                badge.classList.remove("hidden");
+            } else {
+                badge.classList.add("hidden");
+            }
+
+            if (notifs.length === 0) {
+                list.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Sin notificaciones</div>`;
+                return;
+            }
+
+            list.innerHTML = notifs.map(n => `
+                <div class="p-2.5 rounded-lg border border-slate-900 ${n.read ? 'bg-slate-950/20 text-slate-400' : 'bg-slate-900/40 text-slate-200 border-l-2 border-l-amber-500'}">
+                    <div class="flex items-start justify-between">
+                        <span class="text-xs font-bold text-white truncate max-w-[170px]">${n.title}</span>
+                        <span class="text-[8px] font-mono text-slate-500">${n.date}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-0.5 leading-normal">${n.message}</p>
+                </div>
+            `).join("");
+        }
+
+        function markAllNotificationsRead() {
+            const notifs = getNotifications().map(n => ({ ...n, read: true }));
+            setNotifications(notifs);
+            loadNotificationsList();
+            triggerToast("Notificaciones", "Marcadas como leídas", "success");
+        }
+
+        function addNewNotification(title, message) {
+            const notifs = getNotifications();
+            notifs.unshift({
+                id: "not_" + Math.random().toString(36).substring(5),
+                title,
+                message,
+                read: false,
+                date: "Hace un momento"
+            });
+            setNotifications(notifs);
+            loadNotificationsList();
+            triggerToast(title, message, "warning");
+        }
+
+        // --- 3. DYNAMIC TAB NAVIGATION ---
+        function switchTab(tabId) {
+            // Hide all views
+            ["dashboard", "kanban", "clientes", "contratos", "alertas"].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add("hidden");
+                document.getElementById(`nav-${id}`).classList.remove("bg-slate-800/50", "text-white");
+                document.getElementById(`nav-${id}`).classList.add("text-slate-400");
+            });
+
+            // Show active view
+            document.getElementById(`view-${tabId}`).classList.remove("hidden");
+            document.getElementById(`nav-${tabId}`).classList.add("bg-slate-800/50", "text-white");
+            document.getElementById(`nav-${tabId}`).classList.remove("text-slate-400");
+
+            currentTab = tabId;
+
+            // Load data for specific tabs
+            if (tabId === "dashboard") {
+                loadDashboardData();
+            } else if (tabId === "kanban") {
+                loadKanbanBoard();
+            } else if (tabId === "clientes") {
+                loadClientsTable();
+            } else if (tabId === "contratos") {
+                loadContractsTable();
+            } else if (tabId === "alertas") {
+                loadAlertsView();
+            }
+        }
+
+        // --- 4. DASHBOARD VIEW CONTROLLER ---
+        function loadDashboardData() {
+            const clients = getClients();
+            const contracts = getContracts();
+            const notices = getNotices();
+            
+            // Recalculate stats
+            const total = clients.length;
+            const active = clients.filter(c => c.estado === "cliente_activo").length;
+            const leads = clients.filter(c => c.estado === "nuevo_lead").length;
+            const conversion = total ? Math.round((active / total) * 100) : 0;
+            
+            // Total savings
+            const totalSavings = clients.reduce((acc, c) => acc + (c.tiene_ahorro ? Number(c.ahorro_estimado || 0) : 0), 0);
+            const savingsClients = clients.filter(c => c.tiene_ahorro).length;
+
+            // Update DOM KPIs
+            document.getElementById("kpi-total-clients").innerText = total;
+            document.getElementById("kpi-active-clients").innerText = active;
+            document.getElementById("kpi-conversion-rate").innerText = `${conversion}% tasa conversión`;
+            document.getElementById("kpi-new-leads").innerText = leads;
+            document.getElementById("kpi-total-savings").innerText = `${totalSavings.toLocaleString("es-ES")} €`;
+            document.getElementById("kpi-savings-clients").innerText = `${savingsClients} clientes con ahorro`;
+
+            // Active urgent notifications / alerts
+            const activeAlerts = calculateUrgentAlertsList();
+            document.getElementById("kpi-active-alerts").innerText = activeAlerts.length;
+            document.getElementById("alerts-count-badge").innerText = activeAlerts.length;
+            if (activeAlerts.length > 0) {
+                document.getElementById("alerts-count-badge").classList.remove("hidden");
+            } else {
+                document.getElementById("alerts-count-badge").classList.add("hidden");
+            }
+
+            // Render active alerts in list
+            const alertsList = document.getElementById("dashboard-alerts-list");
+            if (activeAlerts.length === 0) {
+                alertsList.innerHTML = `
+                    <div class="text-center py-8 text-slate-500 flex flex-col items-center justify-center gap-1">
+                        <i data-lucide="shield-check" class="w-6 h-6 text-slate-600"></i>
+                        <span class="text-xs">Sin alertas urgentes hoy</span>
+                    </div>
+                `;
+            } else {
+                alertsList.innerHTML = activeAlerts.slice(0, 4).map(a => `
+                    <div onclick="openInspectorDrawer('${a.client_id}')" class="py-2.5 flex items-center justify-between hover:bg-slate-900/30 px-2 rounded-lg cursor-pointer transition-all">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="w-1.5 h-7 rounded-full bg-rose-500"></span>
+                            <div class="min-w-0">
+                                <span class="text-xs font-bold text-white block truncate">${a.client_name}</span>
+                                <span class="text-[9px] text-slate-500 font-mono">CUPS: ${a.cups || 'No definido'}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-rose-400 font-bold block">${a.reason}</span>
+                            <span class="text-[8px] text-slate-500 font-mono">${a.sub}</span>
+                        </div>
+                    </div>
+                `).join("");
+            }
+
+            // Render Bulletin Notice Board
+            const noticeList = document.getElementById("notice-board-list");
+            if (notices.length === 0) {
+                noticeList.innerHTML = `<div class="text-center py-10 text-slate-500 text-xs">Sin anuncios publicados</div>`;
+            } else {
+                noticeList.innerHTML = notices.map(n => `
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-xl p-4 space-y-2 relative group hover:border-slate-700 transition-all">
+                        <button onclick="deleteNotice('${n.id}')" class="absolute top-3 right-3 text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded ${n.priority === 'urgent' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-slate-400 bg-slate-800 border border-slate-750'}">${n.priority}</span>
+                            <h4 class="text-xs font-bold text-white truncate max-w-[180px]">${n.title}</h4>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-normal whitespace-pre-wrap">${n.message}</p>
+                        <div class="flex items-center justify-between text-[8px] text-slate-500 border-t border-slate-850 pt-2 font-mono">
+                            <span>Autor: ${n.author}</span>
+                            <span>${n.date}</span>
+                        </div>
+                    </div>
+                `).join("");
+            }
+
+            // Load charts
+            loadDashboardCharts(clients);
+            lucide.createIcons();
+        }
+
+        function calculateUrgentAlertsList() {
+            const clients = getClients();
+            const contracts = getContracts();
+            const alerts = [];
+
+            // 1. Missing CUPS in active clients
+            clients.forEach(c => {
+                if (c.estado !== "nuevo_lead" && c.estado !== "sin_ahorro" && !c.cups) {
+                    alerts.push({
+                        client_id: c.id,
+                        client_name: c.nombre,
+                        cups: "",
+                        reason: "Falta CUPS",
+                        sub: "Requerido para estudio"
+                    });
+                }
+            });
+
+            // 2. Contracts expiring in less than 60 days
+            contracts.forEach(con => {
+                const client = clients.find(c => c.id === con.cliente_id);
+                if (client) {
+                    const days = Math.ceil((new Date(con.fecha_renovacion) - new Date()) / (1000 * 60 * 60 * 24));
+                    if (days <= 60 && days >= -10) {
+                        alerts.push({
+                            client_id: client.id,
+                            client_name: client.nombre,
+                            cups: client.cups,
+                            reason: days < 0 ? `Vencido` : `Renovación en ${days}d`,
+                            sub: `${con.comercializadora} (${con.tarifa})`
+                        });
+                    }
+                }
+            });
+
+            return alerts;
+        }
+
+        function loadDashboardCharts(clients) {
+            const ctx = document.getElementById('chart-pipeline-dist').getContext('2d');
+            
+            // Destroy previous instance
+            if (pipelineChartInstance) {
+                pipelineChartInstance.destroy();
+            }
+
+            const stateCounts = {
+                nuevo_lead: 0,
+                pendiente_estudio: 0,
+                enviado_firma: 0,
+                pendiente_activacion: 0,
+                cliente_activo: 0,
+                sin_ahorro: 0
+            };
+
+            clients.forEach(c => {
+                if (stateCounts[c.estado] !== undefined) {
+                    stateCounts[c.estado]++;
+                }
+            });
+
+            const labels = CRM_STATES.map(s => s.label);
+            const data = CRM_STATES.map(s => stateCounts[s.value]);
+            const colors = ['#3b82f6', '#f59e0b', '#8b5cf6', '#f97316', '#10b981', '#71717a'];
+
+            pipelineChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Número de Clientes',
+                        data: data,
+                        backgroundColor: colors.map(c => c + '30'),
+                        borderColor: colors,
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 9 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // --- 5. BULLETIN NOTICE BOARD ACTIONS ---
+        function openNoticeModal() {
+            document.getElementById("notice-modal").classList.remove("hidden");
+        }
+
+        function closeNoticeModal() {
+            document.getElementById("notice-modal").classList.add("hidden");
+            document.getElementById("new-notice-title").value = "";
+            document.getElementById("new-notice-message").value = "";
+        }
+
+        function saveNewNotice() {
+            const title = document.getElementById("new-notice-title").value;
+            const priority = document.getElementById("new-notice-priority").value;
+            const message = document.getElementById("new-notice-message").value;
+
+            if (!title || !message) {
+                triggerToast("Advertencia", "Por favor completa el título y el mensaje del aviso", "warning");
+                return;
+            }
+
+            const notices = getNotices();
+            notices.unshift({
+                id: "n_" + Math.random().toString(36).substring(5),
+                title,
+                message,
+                priority,
+                date: new Date().toLocaleDateString("es-ES"),
+                author: "Pepo"
+            });
+            setNotices(notices);
+            closeNoticeModal();
+            loadDashboardData();
+            triggerToast("Aviso Publicado", "Se ha agregado un boletín interno para el equipo", "success");
+            addNewNotification("Nuevo Aviso Interno", `Pepo publicó: "${title}"`);
+        }
+
+        function deleteNotice(id) {
+            let notices = getNotices();
+            notices = notices.filter(n => n.id !== id);
+            setNotices(notices);
+            loadDashboardData();
+            triggerToast("Aviso Eliminado", "Boletín interno retirado de la cartelera", "success");
+        }
+
+        // --- 6. ALERTS & AUTO RENEWAL AUTOMATION ---
+        function loadAlertsView() {
+            const grid = document.getElementById("alerts-grid");
+            const empty = document.getElementById("alerts-empty-state");
+            const activeAlerts = calculateUrgentAlertsList();
+
+            if (activeAlerts.length === 0) {
+                grid.innerHTML = "";
+                empty.classList.remove("hidden");
+                return;
+            }
+
+            empty.classList.add("hidden");
+            grid.innerHTML = activeAlerts.map(a => `
+                <div class="glass-panel p-5 rounded-xl border border-rose-500/20 bg-rose-950/5 flex items-start gap-4 hover:shadow-lg transition-all relative">
+                    <div class="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-400"></i>
+                    </div>
+                    <div class="space-y-1.5 flex-1 min-w-0">
+                        <h4 class="text-xs font-bold text-white truncate">${a.client_name}</h4>
+                        <div class="text-[10px] text-rose-300 font-semibold flex items-center gap-1">
+                            <span>Tipo de aviso:</span> 
+                            <span class="bg-rose-500/20 px-1.5 py-0.2 rounded border border-rose-500/30 uppercase text-[9px]">${a.reason}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-mono">Referencia: ${a.sub} | CUPS: ${a.cups || 'No definido'}</p>
+                    </div>
+                    <div class="shrink-0 flex flex-col gap-1.5">
+                        <button onclick="openInspectorDrawer('${a.client_id}')" class="h-7 px-2.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-bold text-white hover:bg-slate-800 transition-all">
+                            Solucionar
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+            lucide.createIcons();
+        }
+
+        function runAutoRenewalCheck() {
+            triggerToast("Ejecutando automatización", "Escaneando contratos en busca de vencimientos próximos a 60 días...", "warning");
+            setTimeout(() => {
+                const alerts = calculateUrgentAlertsList();
+                if (alerts.length > 0) {
+                    triggerToast("Escaneo Completado", `Se han detectado ${alerts.length} alertas. Las notificaciones han sido añadidas.`, "success");
+                    addNewNotification("Escaneo Renovaciones", `Se localizaron ${alerts.length} contratos con vencimiento cercano.`);
+                    loadDashboardData();
+                    if (currentTab === "alertas") loadAlertsView();
+                } else {
+                    triggerToast("Escaneo Completado", "Todos los contratos en cartera se encuentran al corriente.", "success");
+                }
+            }, 1000);
+        }
+
+        // --- 7. KANBAN BOARD SYSTEM ---
+        function loadKanbanBoard() {
+            const container = document.getElementById("kanban-columns-container");
+            const commFilter = document.getElementById("kanban-commercial-filter").value;
+            const clients = getClients();
+
+            const filteredClients = commFilter === "all" ? clients : clients.filter(c => c.comercial_id === commFilter);
+
+            container.innerHTML = CRM_STATES.map(col => {
+                const items = filteredClients.filter(c => c.estado === col.value);
+                
+                return `
+                    <div class="w-72 shrink-0 flex flex-col bg-slate-950/40 border border-slate-850 rounded-xl p-3 max-h-full">
+                        <!-- Column Header -->
+                        <div class="px-2.5 py-2 flex items-center justify-between border-b border-slate-850 mb-3.5 bg-slate-900/30 rounded-lg">
+                            <span class="text-xs font-bold text-slate-200">${col.label}</span>
+                            <span class="text-[9px] font-mono font-bold text-slate-400 bg-slate-850/80 px-2 py-0.5 rounded-full">${items.length}</span>
+                        </div>
+
+                        <!-- Card Drop Zone -->
+                        <div 
+                            id="col-${col.value}" 
+                            class="flex-1 space-y-3 overflow-y-auto p-1 min-h-[350px] rounded-lg transition-colors duration-200"
+                            ondragover="allowDrop(event)"
+                            ondrop="dropCard(event, '${col.value}')"
+                        >
+                            ${items.map(c => `
+                                <div 
+                                    id="card-${c.id}" 
+                                    draggable="true" 
+                                    ondragstart="dragCard(event, '${c.id}')"
+                                    onclick="openInspectorDrawer('${c.id}')"
+                                    class="group bg-[#0c1224] border border-slate-800 hover:border-slate-700 p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer text-left relative overflow-hidden select-none active:scale-[0.98] transform hover:-translate-y-0.5"
+                                >
+                                    <div class="flex items-start justify-between gap-2.5">
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="text-xs font-bold text-white truncate">${c.nombre}</h4>
+                                            <span class="text-[9px] text-slate-500 font-semibold block mt-0.5">${c.provincia || 'Alicante'}</span>
+                                        </div>
+                                    </div>
+                                    ${c.cups ? `<div class="mt-2.5 font-mono text-[9px] text-slate-400 bg-slate-900 border border-slate-850 px-2 py-0.5 rounded truncate">${c.cups}</div>` : ''}
+                                    
+                                    <div class="mt-3.5 pt-2.5 border-t border-slate-850 flex items-center justify-between text-[10px] text-slate-400">
+                                        <div class="flex items-center gap-1 min-w-0">
+                                            <div class="w-4.5 h-4.5 rounded-full overflow-hidden border border-slate-800 shrink-0">
+                                                <img src="${COMMERCIALS[c.comercial_id]?.avatar}" class="w-full h-full object-cover">
+                                            </div>
+                                            <span class="truncate text-[9px] text-slate-500">${COMMERCIALS[c.comercial_id]?.name.split(" ")[0]}</span>
+                                        </div>
+                                        ${c.tiene_ahorro ? `
+                                            <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                                                ${Number(c.ahorro_estimado).toLocaleString("es-ES")} €
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join("")}
+
+                            ${items.length === 0 ? `
+                                <div class="h-28 border border-dashed border-slate-800/80 rounded-xl flex items-center justify-center text-[10px] text-slate-500 italic">
+                                    Vacío. Arrastra aquí.
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // Native HTML5 Drag and Drop Handlers
+        function dragCard(ev, clientId) {
+            ev.dataTransfer.setData("text/plain", clientId);
+            ev.currentTarget.classList.add("opacity-50");
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dropCard(ev, targetColumnState) {
+            ev.preventDefault();
+            const clientId = ev.dataTransfer.getData("text");
+            const card = document.getElementById(`card-${clientId}`);
+            if (card) {
+                card.classList.remove("opacity-50");
+            }
+
+            let clients = getClients();
+            const clientIndex = clients.findIndex(c => c.id === clientId);
+
+            if (clientIndex !== -1 && clients[clientIndex].estado !== targetColumnState) {
+                const oldState = clients[clientIndex].estado;
+                clients[clientIndex].estado = targetColumnState;
+                setClients(clients);
+                
+                loadKanbanBoard();
+                triggerToast("Pipeline Actualizado", `${clients[clientIndex].nombre} movido a ${CRM_STATES.find(s => s.value === targetColumnState).label}`, "success");
+                
+                // Triggers and Automations on drop
+                if (targetColumnState === "cliente_activo") {
+                    triggerToast("🎉 ¡Enhorabuena!", `El cliente ${clients[clientIndex].nombre} ha sido activado formalmente en la distribuidora.`, "success");
+                    addNewNotification("Cliente Activo", `Se ha activado la cartera de ${clients[clientIndex].nombre}`);
+                }
+            }
+        }
+
+        // --- 8. CLIENTS VIEW CONTROLLER ---
+        function loadClientsTable() {
+            const list = document.getElementById("clients-table-rows");
+            const q = document.getElementById("filter-client-search").value.toLowerCase();
+            const state = document.getElementById("filter-client-state").value;
+            const commercial = document.getElementById("filter-client-commercial").value;
+            const clients = getClients();
+
+            let filtered = clients;
+
+            if (q) {
+                filtered = filtered.filter(c => 
+                    c.nombre.toLowerCase().includes(q) ||
+                    (c.cups && c.cups.toLowerCase().includes(q)) ||
+                    (c.nif && c.nif.toLowerCase().includes(q)) ||
+                    (c.email && c.email.toLowerCase().includes(q))
+                );
+            }
+            if (state !== "all") {
+                filtered = filtered.filter(c => c.estado === state);
+            }
+            if (commercial !== "all") {
+                filtered = filtered.filter(c => c.comercial_id === commercial);
+            }
+
+            document.getElementById("clients-count-subtitle").innerText = `${filtered.length} clientes en cartera filtrados`;
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colSpan="8" class="text-center py-10 text-slate-500 italic">Sin clientes que coincidan con la búsqueda</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            list.innerHTML = filtered.map(c => {
+                const stateObj = CRM_STATES.find(s => s.value === c.estado);
+                return `
+                    <tr class="hover:bg-slate-900/25 transition-all">
+                        <td class="px-5 py-3">
+                            <span onclick="openInspectorDrawer('${c.id}')" class="font-semibold text-white hover:underline cursor-pointer block">${c.nombre}</span>
+                            <span class="text-[10px] text-slate-500 block mt-0.5 font-mono">${c.nif || 'Sin NIF'}</span>
+                        </td>
+                        <td class="px-3 py-3 font-mono text-[10px] text-slate-400">${c.cups || '—'}</td>
+                        <td class="px-3 py-3">
+                            <span class="block text-slate-300 font-semibold">${c.telefono || '—'}</span>
+                            <span class="block text-[10px] text-slate-500">${c.email || '—'}</span>
+                        </td>
+                        <td class="px-3 py-3 text-slate-400 max-w-[150px] truncate" title="${c.direccion || ''}">
+                            <span>${c.direccion || '—'}</span>
+                            <span class="block text-[10px] text-slate-500 font-semibold">${c.provincia || ''}</span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-bold border ${stateObj?.color}">
+                                ${stateObj?.label}
+                            </span>
+                        </td>
+                        <td class="px-3 py-3">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-5 h-5 rounded-full overflow-hidden border border-slate-800">
+                                    <img src="${COMMERCIALS[c.comercial_id]?.avatar}" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[10px] text-slate-350">${COMMERCIALS[c.comercial_id]?.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-3 py-3 text-right font-mono font-bold text-emerald-400">
+                            ${c.tiene_ahorro ? `${c.ahorro_estimado} €` : '—'}
+                        </td>
+                        <td class="px-5 py-3 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <button onclick="openInspectorDrawer('${c.id}')" class="p-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="deleteClient('${c.id}')" class="p-1 rounded bg-rose-955 border border-rose-500/10 hover:bg-rose-500/10 text-rose-500 hover:text-rose-400 transition-all">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+            lucide.createIcons();
+        }
+
+        function clearClientsFilters() {
+            document.getElementById("filter-client-search").value = "";
+            document.getElementById("filter-client-state").value = "all";
+            document.getElementById("filter-client-commercial").value = "all";
+            loadClientsTable();
+        }
+
+        function openClientModal() {
+            document.getElementById("client-modal").classList.remove("hidden");
+        }
+
+        function closeClientModal() {
+            document.getElementById("client-modal").classList.add("hidden");
+            // clear form
+            ["nombre", "nif", "telefono", "email", "cups", "tarifa", "provincia", "direccion"].forEach(id => {
+                document.getElementById(`new-client-${id}`).value = "";
+            });
+        }
+
+        function saveNewClient() {
+            const nombre = document.getElementById("new-client-nombre").value;
+            const nif = document.getElementById("new-client-nif").value;
+            const telefono = document.getElementById("new-client-telefono").value;
+            const email = document.getElementById("new-client-email").value;
+            const cups = document.getElementById("new-client-cups").value;
+            const tarifa = document.getElementById("new-client-tarifa").value;
+            const provincia = document.getElementById("new-client-provincia").value;
+            const direccion = document.getElementById("new-client-direccion").value;
+
+            if (!nombre) {
+                triggerToast("Faltan datos", "El nombre/empresa es obligatorio", "warning");
+                return;
+            }
+
+            const clients = getClients();
+            const newId = "c_" + Math.random().toString(36).substring(5);
+
+            clients.unshift({
+                id: newId,
+                nombre, nif, telefono, email, cups, tarifa, direccion, provincia,
+                estado: "nuevo_lead",
+                comercial_id: "1",
+                tiene_ahorro: false,
+                ahorro_estimado: 0,
+                notas_limpias: "",
+                sync_status: "pendiente"
+            });
+            setClients(clients);
+            closeClientModal();
+            
+            // Reload views
+            if (currentTab === "clientes") loadClientsTable();
+            if (currentTab === "kanban") loadKanbanBoard();
+            
+            triggerToast("Cliente Creado", `${nombre} ha sido dado de alta exitosamente`, "success");
+            addNewNotification("Nuevo Lead Registrado", `${nombre} se encuentra disponible en la Pipeline.`);
+        }
+
+        function deleteClient(id) {
+            if (!confirm("¿Seguro que deseas eliminar permanentemente a este cliente?")) return;
+            
+            let clients = getClients();
+            const cName = clients.find(c => c.id === id)?.nombre;
+            clients = clients.filter(c => c.id !== id);
+            setClients(clients);
+
+            // Also delete contracts associated
+            let contracts = getContracts();
+            contracts = contracts.filter(con => con.cliente_id !== id);
+            setContracts(contracts);
+
+            loadClientsTable();
+            triggerToast("Cliente Eliminado", `Cartera y contratos de ${cName} eliminados de Supabase`, "success");
+        }
+
+        // --- 9. CONTRACTS VIEW CONTROLLER ---
+        function loadContractsTable() {
+            const list = document.getElementById("contracts-table-rows");
+            const q = document.getElementById("filter-contract-search").value.toLowerCase();
+            const company = document.getElementById("filter-contract-comercializadora").value;
+            const contracts = getContracts();
+            const clients = getClients();
+
+            let filtered = contracts;
+
+            if (q) {
+                filtered = filtered.filter(con => {
+                    const clientName = clients.find(c => c.id === con.cliente_id)?.nombre.toLowerCase() || "";
+                    return con.comercializadora.toLowerCase().includes(q) ||
+                           con.tarifa.toLowerCase().includes(q) ||
+                           clientName.includes(q);
+                });
+            }
+            if (company !== "all") {
+                filtered = filtered.filter(con => con.comercializadora === company);
+            }
+
+            document.getElementById("contracts-count-subtitle").innerText = `${filtered.length} contratos vigentes/pendientes`;
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colSpan="8" class="text-center py-10 text-slate-500 italic">Sin contratos registrados</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            list.innerHTML = filtered.map(con => {
+                const client = clients.find(c => c.id === con.cliente_id) || { nombre: "Sin cliente asignado" };
+                return `
+                    <tr class="hover:bg-slate-900/25 transition-all">
+                        <td class="px-5 py-3">
+                            <span onclick="openInspectorDrawer('${client.id}')" class="font-semibold text-white hover:underline cursor-pointer block">${client.nombre}</span>
+                            <span class="text-[10px] text-slate-500 block mt-0.5 font-mono">CUPS: ${client.cups || '—'}</span>
+                        </td>
+                        <td class="px-3 py-3 text-slate-200 font-semibold">${con.comercializadora}</td>
+                        <td class="px-3 py-3 text-center font-mono text-[10px] text-slate-400 bg-slate-900/30 rounded border border-slate-800 inline-block mt-2 px-2 py-0.5">${con.tarifa}</td>
+                        <td class="px-3 py-3 text-right font-mono text-slate-350">${con.potencia_contratada} kW</td>
+                        <td class="px-3 py-3 font-mono text-slate-400">${new Date(con.fecha_inicio).toLocaleDateString("es-ES")}</td>
+                        <td class="px-3 py-3 font-mono text-slate-200 font-semibold">${new Date(con.fecha_renovacion).toLocaleDateString("es-ES")}</td>
+                        <td class="px-3 py-3 text-right font-mono font-bold text-emerald-400">${Number(con.importe_anual).toLocaleString("es-ES")} €</td>
+                        <td class="px-5 py-3 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <button onclick="openNewContractModal(false, '${con.id}')" class="p-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button onclick="deleteContract('${con.id}')" class="p-1 rounded bg-rose-955 border border-rose-500/10 hover:bg-rose-500/10 text-rose-500 hover:text-rose-400 transition-all">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+            lucide.createIcons();
+        }
+
+        function clearContractsFilters() {
+            document.getElementById("filter-contract-search").value = "";
+            document.getElementById("filter-contract-comercializadora").value = "all";
+            loadContractsTable();
+        }
+
+        function openNewContractModal(fromInspector = false, contractId = null) {
+            document.getElementById("contract-modal").classList.remove("hidden");
+            document.getElementById("modal-contract-from-inspector").value = fromInspector ? "true" : "false";
+
+            // Load clients for dropdown list
+            const clients = getClients();
+            const clientSelect = document.getElementById("modal-contract-client-id");
+            clientSelect.innerHTML = clients.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("");
+
+            if (fromInspector && activeInspectorClientId) {
+                clientSelect.value = activeInspectorClientId;
+                document.getElementById("contract-select-client-container").classList.add("hidden");
+            } else {
+                document.getElementById("contract-select-client-container").classList.remove("hidden");
+            }
+
+            if (contractId) {
+                // Editing mode
+                const con = getContracts().find(c => c.id === contractId);
+                if (con) {
+                    document.getElementById("contract-modal-title").innerText = "Editar Contrato";
+                    document.getElementById("modal-contract-id").value = con.id;
+                    clientSelect.value = con.cliente_id;
+                    document.getElementById("modal-contract-comercializadora").value = con.comercializadora;
+                    document.getElementById("modal-contract-tarifa").value = con.tarifa;
+                    document.getElementById("modal-contract-potencia").value = con.potencia_contratada;
+                    document.getElementById("modal-contract-inicio").value = con.fecha_inicio;
+                    document.getElementById("modal-contract-renovacion").value = con.fecha_renovacion;
+                    document.getElementById("modal-contract-importe").value = con.importe_anual;
+                }
+            } else {
+                // Create mode
+                document.getElementById("contract-modal-title").innerText = "Nuevo Contrato";
+                document.getElementById("modal-contract-id").value = "";
+                document.getElementById("modal-contract-comercializadora").value = "Iberdrola";
+                document.getElementById("modal-contract-tarifa").value = "2.0TD";
+                document.getElementById("modal-contract-potencia").value = 5.5;
+                document.getElementById("modal-contract-inicio").value = new Date().toISOString().slice(0, 10);
+                document.getElementById("modal-contract-renovacion").value = new Date(Date.now() + 365*86400000).toISOString().slice(0, 10);
+                document.getElementById("modal-contract-importe").value = 0;
+            }
+        }
+
+        function closeContractModal() {
+            document.getElementById("contract-modal").classList.add("hidden");
+        }
+
+        function saveContract() {
+            const cid = document.getElementById("modal-contract-id").value;
+            const clienteId = document.getElementById("modal-contract-client-id").value;
+            const comercializadora = document.getElementById("modal-contract-comercializadora").value;
+            const tarifa = document.getElementById("modal-contract-tarifa").value;
+            const potencia = Number(document.getElementById("modal-contract-potencia").value);
+            const inicio = document.getElementById("modal-contract-inicio").value;
+            const renovacion = document.getElementById("modal-contract-renovacion").value;
+            const importe = Number(document.getElementById("modal-contract-importe").value);
+            const fromInspector = document.getElementById("modal-contract-from-inspector").value === "true";
+
+            if (!comercializadora || !tarifa || !inicio || !renovacion) {
+                triggerToast("Error", "Completa todos los campos", "warning");
+                return;
+            }
+
+            const contracts = getContracts();
+
+            if (cid) {
+                // Edit
+                const index = contracts.findIndex(c => c.id === cid);
+                if (index !== -1) {
+                    contracts[index] = { ...contracts[index], cliente_id: clienteId, comercializadora, tarifa, potencia_contratada: potencia, fecha_inicio: inicio, fecha_renovacion: renovacion, importe_anual: importe };
+                    triggerToast("Contrato Actualizado", "El contrato se ha editado con éxito", "success");
+                }
+            } else {
+                // New
+                contracts.push({
+                    id: "con_" + Math.random().toString(36).substring(5),
+                    cliente_id: clienteId, comercializadora, tarifa, potencia_contratada: potencia, fecha_inicio: inicio, fecha_renovacion: renovacion, importe_anual: importe
+                });
+                triggerToast("Contrato Creado", "Se ha registrado el nuevo contrato energético", "success");
+                
+                const clientName = getClients().find(c => c.id === clienteId)?.nombre;
+                addNewNotification("Nuevo Contrato", `Registrado contrato de ${clientName} con ${comercializadora}`);
+            }
+
+            setContracts(contracts);
+            closeContractModal();
+
+            // Refresh table or Inspector
+            if (fromInspector) {
+                loadInspectorContracts();
+            } else {
+                loadContractsTable();
+            }
+        }
+
+        function deleteContract(id) {
+            if (!confirm("¿Deseas dar de baja y eliminar este contrato?")) return;
+
+            let contracts = getContracts();
+            contracts = contracts.filter(c => c.id !== id);
+            setContracts(contracts);
+
+            if (activeInspectorClientId) {
+                loadInspectorContracts();
+            } else {
+                loadContractsTable();
+            }
+            triggerToast("Contrato Eliminado", "Contrato eliminado correctamente de la cartera", "success");
+        }
+
+        // --- 10. SMART INSPECTOR DRAWER CONTROLLER ---
+        function openInspectorDrawer(clientId) {
+            const drawer = document.getElementById("inspector-drawer");
+            const client = getClients().find(c => c.id === clientId);
+
+            if (!client) return;
+
+            activeInspectorClientId = clientId;
+            document.getElementById("inspector-client-name").innerText = client.nombre;
+
+            // Fill General Tab Form Inputs
+            document.getElementById("edit-client-nombre").value = client.nombre || "";
+            document.getElementById("edit-client-nif").value = client.nif || "";
+            document.getElementById("edit-client-telefono").value = client.telefono || "";
+            document.getElementById("edit-client-email").value = client.email || "";
+            document.getElementById("edit-client-cups").value = client.cups || "";
+            document.getElementById("edit-client-tarifa").value = client.tarifa || "";
+            document.getElementById("edit-client-provincia").value = client.provincia || "";
+            document.getElementById("edit-client-direccion").value = client.direccion || "";
+            document.getElementById("edit-client-estado").value = client.estado || "nuevo_lead";
+            document.getElementById("edit-client-comercial").value = client.comercial_id || "1";
+            document.getElementById("edit-client-ahorro").value = client.ahorro_estimado || 0;
+            document.getElementById("edit-client-notas").value = client.notas_limpias || "";
+
+            // Reset Tab views
+            switchInspectorTab("datos");
+
+            // Slide in Drawer
+            drawer.classList.remove("translate-x-full");
+        }
+
+        function closeInspectorDrawer() {
+            const drawer = document.getElementById("inspector-drawer");
+            drawer.classList.add("translate-x-full");
+            activeInspectorClientId = null;
+        }
+
+        function switchInspectorTab(tabId) {
+            ["datos", "contratos", "documentos"].forEach(id => {
+                document.getElementById(`inspector-tab-${id}`).classList.remove("bg-slate-800", "text-white");
+                document.getElementById(`inspector-tab-${id}`).classList.add("text-slate-400");
+                document.getElementById(`inspector-pane-${id}`).classList.add("hidden");
+            });
+
+            document.getElementById(`inspector-tab-${tabId}`).classList.add("bg-slate-800", "text-white");
+            document.getElementById(`inspector-tab-${tabId}`).classList.remove("text-slate-400");
+            document.getElementById(`inspector-pane-${tabId}`).classList.remove("hidden");
+
+            activeInspectorTab = tabId;
+
+            if (tabId === "contratos") {
+                loadInspectorContracts();
+            } else if (tabId === "documentos") {
+                loadInspectorDocuments();
+            }
+        }
+
+        function saveInspectorClientData() {
+            if (!activeInspectorClientId) return;
+
+            let clients = getClients();
+            const index = clients.findIndex(c => c.id === activeInspectorClientId);
+
+            if (index !== -1) {
+                const nombre = document.getElementById("edit-client-nombre").value;
+                const nif = document.getElementById("edit-client-nif").value;
+                const telefono = document.getElementById("edit-client-telefono").value;
+                const email = document.getElementById("edit-client-email").value;
+                const cups = document.getElementById("edit-client-cups").value;
+                const tarifa = document.getElementById("edit-client-tarifa").value;
+                const provincia = document.getElementById("edit-client-provincia").value;
+                const direccion = document.getElementById("edit-client-direccion").value;
+                const estado = document.getElementById("edit-client-estado").value;
+                const comercial = document.getElementById("edit-client-comercial").value;
+                const ahorro = Number(document.getElementById("edit-client-ahorro").value);
+                const notas = document.getElementById("edit-client-notas").value;
+
+                clients[index] = {
+                    ...clients[index],
+                    nombre, nif, telefono, email, cups, tarifa, provincia, direccion, estado,
+                    comercial_id: comercial,
+                    tiene_ahorro: ahorro > 0,
+                    ahorro_estimado: ahorro,
+                    notas_limpias: notas
+                };
+
+                setClients(clients);
+                triggerToast("Datos Actualizados", "Ficha de cliente guardada", "success");
+                
+                // Refresh active views
+                if (currentTab === "kanban") loadKanbanBoard();
+                if (currentTab === "clientes") loadClientsTable();
+                if (currentTab === "dashboard") loadDashboardData();
+            }
+        }
+
+        function loadInspectorContracts() {
+            const list = document.getElementById("inspector-contracts-list");
+            const conList = getContracts().filter(con => con.cliente_id === activeInspectorClientId);
+
+            if (conList.length === 0) {
+                list.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs italic bg-slate-900/30 rounded-lg border border-slate-800">Este cliente no dispone de contratos asociados</div>`;
+                return;
+            }
+
+            list.innerHTML = conList.map(con => `
+                <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl hover:border-slate-700 transition-all flex flex-col gap-2 relative group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-white block">${con.comercializadora}</span>
+                            <span class="text-[9px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-850 inline-block mt-1">${con.tarifa} · ${con.potencia_contratada} kW</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openNewContractModal(true, '${con.id}')" class="p-1 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="deleteContract('${con.id}')" class="p-1 rounded bg-rose-955 border border-rose-500/10 hover:bg-rose-500/10 text-rose-500 hover:text-rose-400">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 border-t border-slate-850 pt-2 text-[9px] text-slate-500 font-mono">
+                        <div>Vence: <span class="text-slate-300 font-bold">${new Date(con.fecha_renovacion).toLocaleDateString("es-ES")}</span></div>
+                        <div class="text-right">Importe: <span class="text-emerald-400 font-bold">${con.importe_anual} €</span></div>
+                    </div>
+                </div>
+            `).join("");
+            lucide.createIcons();
+        }
+
+        function loadInspectorDocuments() {
+            const list = document.getElementById("inspector-documents-list");
+            const docs = JSON.parse(localStorage.getItem(`docs_${activeInspectorClientId}`)) || [];
+
+            if (docs.length === 0) {
+                list.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs italic bg-slate-900/30 rounded-lg border border-slate-800">No hay documentos digitalizados</div>`;
+                return;
+            }
+
+            list.innerHTML = docs.map(d => `
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg flex items-center justify-between text-xs hover:border-slate-700 transition-all">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <i data-lucide="file-text" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                        <div class="min-w-0 leading-tight">
+                            <span class="font-semibold text-white block truncate">${d.nombre}</span>
+                            <span class="text-[9px] text-slate-500 font-mono block mt-0.5">${d.size} · ${new Date(d.date).toLocaleDateString("es-ES")}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded">OCR OK</span>
+                        <button onclick="deleteInspectorDocument('${d.id}')" class="p-1 rounded bg-slate-800 hover:bg-rose-500/10 text-slate-400 hover:text-rose-500">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+            lucide.createIcons();
+        }
+
+        function simulateOCRUpload(file) {
+            if (!file) return;
+
+            const dropzone = document.getElementById("ocr-dropzone-content");
+            const originalHTML = dropzone.innerHTML;
+
+            // Trigger spinner
+            dropzone.innerHTML = `
+                <div class="flex flex-col items-center gap-2 py-2">
+                    <div class="w-7 h-7 rounded-full border-2 border-slate-700 border-t-amber-500 animate-spin"></div>
+                    <span class="text-xs font-bold text-white">Analizando factura con Gemini 3 Pro...</span>
+                    <span class="text-[9px] text-slate-500">Extrayendo CUPS, Potencia, Tarifa y Precios...</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const clients = getClients();
+                const index = clients.findIndex(c => c.id === activeInspectorClientId);
+
+                if (index !== -1) {
+                    const mockCups = "ES002100000" + Math.floor(10000000 + Math.random()*90000000) + "AMQL";
+                    const mockTarifa = Math.random() > 0.5 ? "2.0TD" : "3.0TD";
+                    
+                    // Autofill cups & Tarifa
+                    clients[index].cups = mockCups;
+                    clients[index].tarifa = mockTarifa;
+                    clients[index].tiene_ahorro = true;
+                    clients[index].ahorro_estimado = Math.floor(200 + Math.random()*600);
+
+                    // Add document list record
+                    const docsKey = `docs_${activeInspectorClientId}`;
+                    const existingDocs = JSON.parse(localStorage.getItem(docsKey)) || [];
+                    existingDocs.unshift({
+                        id: "doc_" + Math.random().toString(36).substring(5),
+                        nombre: file.name,
+                        size: (file.size / 1024).toFixed(1) + " KB",
+                        date: new Date().toISOString()
+                    });
+
+                    setClients(clients);
+                    localStorage.setItem(docsKey, JSON.stringify(existingDocs));
+
+                    // Reset dropzone visual
+                    dropzone.innerHTML = originalHTML;
+                    
+                    // Reload general inputs
+                    document.getElementById("edit-client-cups").value = mockCups;
+                    document.getElementById("edit-client-tarifa").value = mockTarifa;
+                    document.getElementById("edit-client-ahorro").value = clients[index].ahorro_estimado;
+
+                    triggerToast("OCR Completado", "Factura analizada con éxito. Datos e Importes extraídos e integrados.", "success");
+                    addNewNotification("OCR Completo", `Factura cargada en ${clients[index].nombre} extrajo CUPS: ${mockCups}`);
+
+                    // Reload views
+                    switchInspectorTab("documentos");
+                    if (currentTab === "kanban") loadKanbanBoard();
+                    if (currentTab === "clientes") loadClientsTable();
+                    if (currentTab === "dashboard") loadDashboardData();
+                }
+            }, 1800);
+        }
+
+        function deleteInspectorDocument(docId) {
+            if (!confirm("¿Deseas eliminar este documento?")) return;
+            const docsKey = `docs_${activeInspectorClientId}`;
+            let existingDocs = JSON.parse(localStorage.getItem(docsKey)) || [];
+            existingDocs = existingDocs.filter(d => d.id !== docId);
+            localStorage.setItem(docsKey, JSON.stringify(existingDocs));
+
+            loadInspectorDocuments();
+            triggerToast("Documento retirado", "Fichero PDF borrado de la nube con éxito", "success");
+        }
+
+        // --- 11. GLOBAL SEARCH CONTROLLER ---
+        function handleGlobalSearch(val) {
+            if (!val) {
+                if (currentTab === "clientes") loadClientsTable();
+                if (currentTab === "contratos") loadContractsTable();
+                return;
+            }
+
+            const q = val.toLowerCase();
+
+            if (currentTab === "clientes") {
+                document.getElementById("filter-client-search").value = val;
+                loadClientsTable();
+            } else if (currentTab === "contratos") {
+                document.getElementById("filter-contract-search").value = val;
+                loadContractsTable();
+            } else {
+                // If in dashboard or kanban, auto route to Clientes view
+                switchTab("clientes");
+                document.getElementById("filter-client-search").value = val;
+                loadClientsTable();
+            }
+        }
+
+        // --- INITIALIZE APPLICATION ---
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            switchTab("dashboard");
+            loadNotificationsList();
+        });
+    </script>
+</body>
+</html>

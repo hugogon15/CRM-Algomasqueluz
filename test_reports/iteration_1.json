@@ -1,0 +1,49 @@
+{
+  "summary": "Comprehensive backend + frontend testing of AlgoMásQueLuz OS. 25/26 backend tests passed; frontend login + nav + all critical pages render correctly with backend integration working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/auth/login",
+        "issue": "Brute-force lockout never triggers in production. Identifier is `{request.client.host}:{email}` but behind the Kubernetes ingress, `request.client.host` rotates between proxy IPs (observed 10.208.130.77 and 10.208.130.78 alternating), so each attempt creates/looks up a different login_attempts record. After 7 consecutive wrong attempts the API still returns 401, never 429. FIX: either (a) trust X-Forwarded-For (use ProxyHeadersMiddleware / forwarded_allow_ips='*') and parse the original client IP, or (b) use only email (or email + hashed IP from XFF) as the lockout identifier."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard", "issues": ["Console warnings 'The width(-1) and height(-1) of chart should be greater than 0' from Recharts ResponsiveContainer — chart still renders fine but the parent container reports negative dimensions on initial mount. Non-blocking; consider setting minWidth/minHeight or fixed aspect ratio on the chart wrapper."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_backend.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix brute-force lockout to work behind proxy: trust X-Forwarded-For or change identifier to email-only (or email+XFF-IP). Currently the 5-attempts/15-min lockout is effectively disabled in production preview URL.",
+    "(Optional) Fix Recharts ResponsiveContainer width(-1) warning on Dashboard."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 944 lines — consider splitting into auth.py, clients.py, contracts.py, dashboard.py, documents.py, notifications.py modules for maintainability.",
+    "Brute-force protection uses request.client.host which is the immediate upstream proxy in Kubernetes — does not capture real client IP. Use Starlette's ProxyHeadersMiddleware or read X-Forwarded-For explicitly.",
+    "/api/clients DELETE allows gestor (via require_role('admin','gestor')) but no audit trail of who deleted what; consider soft-delete or audit log for B2B CRM.",
+    "Comercial users can list/patch/delete contracts for ANY client (no comercial-scoping in /api/contracts GET/PATCH/DELETE) — leaks data across comerciales. Only /api/clients enforces comercial isolation.",
+    "/api/documents GET and POST upload have no comercial scoping either; any authenticated user can list/upload to any client.",
+    "OCR endpoint stores the uploaded file under backend/uploads/{uuid}{ext} but there is no static file serving / downloads endpoint, so once uploaded, the actual file cannot be retrieved by the frontend.",
+    "Login response leaks access_token in body in addition to setting httpOnly cookie — defeats the purpose of httpOnly cookie strategy. Either remove the token from body or document that body token is intentional for non-browser clients.",
+    "No rate-limiting on /api/documents/upload — Gemini call is 10-30s and could be abused."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_backend.py",
+    "/app/backend/tests/conftest.py"
+  ],
+  "success_rate": {"backend": "96% (25/26)", "frontend": "100% (all critical flows verified)"},
+  "test_credentials": "Admin: admin@algomasqueluz.com / Admin123!  | Comercial: carlos.comercial@algomasqueluz.com / Demo123!  | Gestor: lucia.gestor@algomasqueluz.com / Demo123!  | Backoffice: marta.back@algomasqueluz.com / Demo123!",
+  "seed_data_creation": "Backend seeded automatically on startup: 4 users + 12 clients + ~6 contracts. Verified by GET /api/clients returning 12 results.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend test file at /app/backend/tests/test_backend.py covers auth (login/me/logout/brute-force/register-RBAC), clients (CRUD/search/filter/comercial-isolation), contracts (CRUD/sort), dashboard (stats/alerts), renovations, users, meta and OCR upload (non-blocking). Pipeline kanban DnD was not exercised in playwright (only visual verification). The only known backend failure is brute-force lockout due to rotating proxy IPs — once fixed the test_brute_force_lockout assertion should pass. OCR endpoint accepted the tiny PNG and returned ocr_status in valid set; the actual Gemini-3-Pro call result was not validated for correctness.",
+  "rca of the issue": "Brute-force lockout fails because FastAPI's `request.client.host` reflects the direct TCP peer (the K8s ingress proxy) and the ingress load-balances across multiple proxy pods (observed alternating 10.208.130.77 / 10.208.130.78 in supervisor logs). Each request thus produces a different identifier `{ip}:{email}`, splitting the 5-attempt counter across rows. Repro: 7 consecutive POSTs to /api/auth/login with same wrong email from same client all return 401. Mitigation: add `app.add_middleware(ProxyHeadersMiddleware, trusted_hosts='*')` or read `request.headers.get('x-forwarded-for','').split(',')[0].strip()` for the identifier; alternatively, drop IP from the key and lock per email only (with a small CAPTCHA later)."
+}
