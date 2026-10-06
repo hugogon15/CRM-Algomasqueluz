@@ -834,6 +834,25 @@ export const api = {
 
       if (error) throw error;
       const cleaned = extractClientMetadata(data);
+
+      // Async sync to Cloudflare D1 database (non-blocking)
+      try {
+        const { queryD1 } = await import("./cloudflareD1");
+        queryD1(
+          `INSERT INTO clientes (id, nombre, telefono, email, cups, provincia, direccion, nif, cif, estado, comercial_id, tiene_ahorro, ahorro_estimado, notas, tarifa, tipo_titular, colaborador, iban, tipo_servicio, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            data.id, data.nombre || "", data.telefono || "", data.email || "", data.cups || "",
+            data.provincia || "", data.direccion || "", data.nif || "", data.cif || "",
+            data.estado || "nuevo_lead", data.comercial_id || "", data.tiene_ahorro ? 1 : 0,
+            data.ahorro_estimado || 0.0, data.notas || "", data.tarifa || "2.0TD",
+            data.tipo_titular || "fisica", data.colaborador || "", data.iban || "",
+            data.tipo_servicio || "luz", data.created_at || new Date().toISOString()
+          ]
+        ).catch(e => console.log("[Cloudflare D1 Sync Notice]", e.message));
+      } catch (err) {
+        console.log("[Cloudflare D1 module notice]", err);
+      }
+
       return {
         data: {
           ...cleaned,
@@ -880,7 +899,25 @@ export const api = {
         estado: estadoToUse,
         notas: dbNotas
       }).select().single();
+
       if (error) throw error;
+
+      // Async sync to Cloudflare D1 database (non-blocking)
+      try {
+        const { queryD1 } = await import("./cloudflareD1");
+        queryD1(
+          `INSERT INTO contratos (id, cliente_id, comercializadora, tarifa, potencia_contratada, fecha_inicio, fecha_renovacion, permanencia_meses, importe_anual, notas, tipo_servicio, comision, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            data.id, data.cliente_id, data.comercializadora || "", data.tarifa || "",
+            data.potencia_contratada || 0.0, data.fecha_inicio, data.fecha_renovacion,
+            data.permanencia_meses || 12, data.importe_anual || 0.0, data.notas || "",
+            meta.tipo_servicio || "luz", meta.comision || 0.0, data.created_at || new Date().toISOString()
+          ]
+        ).catch(e => console.log("[Cloudflare D1 Sync Notice]", e.message));
+      } catch (err) {
+        console.log("[Cloudflare D1 module notice]", err);
+      }
+
       return { data: extractContractMetadata(data) };
     }
 
