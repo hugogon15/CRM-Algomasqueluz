@@ -941,21 +941,29 @@ export const api = {
     }
 
     // 6. Upload Document with Cloudflare D1 Sync & Base64 storage
+    // 6. Upload Document with Cloudflare D1 Sync & Base64 storage
     if (url === "/documents/upload") {
-      const file = payload.get("file");
-      const docName = file?.name || payload.get("nombre") || "Documento.pdf";
-      const clientId = cleanUuid(payload.get("cliente_id"));
-      const contratoId = cleanUuid(payload.get("contrato_id"));
-      const type = payload.get("tipo") || "factura";
-      const mimeType = file?.type || (docName.endsWith(".pdf") ? "application/pdf" : docName.endsWith(".png") ? "image/png" : docName.endsWith(".jpg") || docName.endsWith(".jpeg") ? "image/jpeg" : "application/octet-stream");
-      const size = file?.size || 1450201;
+      const isFormData = payload && typeof payload.get === "function";
+      const getVal = (key) => {
+        if (!payload) return null;
+        if (isFormData) return payload.get(key);
+        return payload[key] !== undefined ? payload[key] : null;
+      };
+
+      const file = isFormData ? payload.get("file") : null;
+      const docName = (isFormData ? file?.name : getVal("nombre")) || getVal("nombre") || "Documento.pdf";
+      const clientId = cleanUuid(getVal("cliente_id"));
+      const contratoId = cleanUuid(getVal("contrato_id"));
+      const type = getVal("tipo") || "factura";
+      const mimeType = (isFormData ? file?.type : getVal("mime_type")) || getVal("mime_type") || (docName.endsWith(".pdf") ? "application/pdf" : docName.endsWith(".png") ? "image/png" : docName.endsWith(".jpg") || docName.endsWith(".jpeg") ? "image/jpeg" : "application/octet-stream");
+      const size = (isFormData ? file?.size : getVal("size")) || getVal("size") || 1450201;
       
       const storedUser = JSON.parse(localStorage.getItem("aml_user") || "{}");
       const validatedUploadedBy = await getValidUserId(storedUser.id);
 
       // Read file content as base64 Data URL if available
-      let filePath = "";
-      if (file && typeof file.arrayBuffer === "function") {
+      let filePath = getVal("file_data") || "";
+      if (isFormData && file && typeof file.arrayBuffer === "function") {
         try {
           const buffer = await file.arrayBuffer();
           const bytes = new Uint8Array(buffer);
@@ -985,7 +993,19 @@ export const api = {
         resumen: "Factura de luz analizada con IA. Ahorro potencial detectado del 12% optimizando tarifa."
       };
 
-      const docId = cleanUuid(payload.get("id")) || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`);
+      // Ensure valid UUID v4 for the document ID
+      const rawId = getVal("id");
+      let docId = cleanUuid(rawId);
+      if (!docId) {
+        if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+          docId = crypto.randomUUID();
+        } else {
+          docId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        }
+      }
 
       const insertRecord = {
         id: docId,
@@ -997,7 +1017,7 @@ export const api = {
         size: size,
         file_path: filePath,
         ocr_status: type === "factura" ? "completed" : "skipped",
-        extracted_data: type === "factura" ? mockOcrData : { description: payload.get("description") || "" },
+        extracted_data: type === "factura" ? mockOcrData : { description: getVal("description") || "" },
         uploaded_by: validatedUploadedBy
       };
 
