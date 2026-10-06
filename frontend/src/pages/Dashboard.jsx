@@ -48,19 +48,19 @@ function KpiCard({ label, value, sub, icon: Icon, accent, highlight, active, onC
     return (
       <button 
         onClick={onClick}
-        className={`w-full text-left bg-gradient-to-br from-[#ff5722] to-[#e64a19] border border-[#ff5722] rounded-[1.5rem] p-5 pb-3 flex flex-col gap-2.5 shadow-md card-hover text-white transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,87,34,0.3)] cursor-pointer focus:outline-none ${highlightActive}`} 
+        className={`w-full text-left bg-gradient-to-br from-[#ff5722] to-[#e64a19] border border-[#ff5722] rounded-[1.5rem] p-4 md:p-5 flex flex-col gap-1.5 md:gap-2.5 shadow-md card-hover text-white transition-all duration-300 hover:shadow-[0_8px_30px_rgba(255,87,34,0.3)] cursor-pointer focus:outline-none ${highlightActive}`} 
         data-testid={`kpi-${label.toLowerCase().replace(/\s/g, "-")}`}
       >
         <div className="flex items-center justify-between">
-          <div className="text-[10px] uppercase tracking-[0.12em] font-bold text-white/80">{label}</div>
-          <Icon className="w-4 h-4 text-white" />
+          <div className="text-[10px] uppercase tracking-[0.12em] font-bold text-white/80 truncate pr-1">{label}</div>
+          <Icon className="w-4 h-4 text-white shrink-0" />
         </div>
-        <div className="font-display text-3xl font-bold text-white tracking-tight">{value}</div>
-        {sub && <div className="text-xs text-white/80 font-medium">{sub}</div>}
+        <div className="font-display text-2xl md:text-3xl font-bold text-white tracking-tight truncate">{value}</div>
+        {sub && <div className="text-[11px] md:text-xs text-white/80 font-medium truncate">{sub}</div>}
         
         {sparkData && sparkData.length > 0 && (
-          <div className="h-8 mt-1 w-full opacity-60">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-6 md:h-8 mt-1 w-full opacity-60 overflow-hidden">
+            <ResponsiveContainer width="100%" height={32}>
               <AreaChart data={sparkData} margin={{ top: 0, bottom: 0, left: 0, right: 0 }}>
                 <defs>
                   <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
@@ -87,19 +87,19 @@ function KpiCard({ label, value, sub, icon: Icon, accent, highlight, active, onC
   return (
     <button 
       onClick={onClick}
-      className={`w-full text-left bg-white border rounded-[1.5rem] p-5 pb-3 flex flex-col gap-2.5 card-hover shadow-sm transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] cursor-pointer focus:outline-none ${activeClass}`} 
+      className={`w-full text-left bg-white border rounded-[1.5rem] p-4 md:p-5 flex flex-col gap-1.5 md:gap-2.5 card-hover shadow-sm transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] cursor-pointer focus:outline-none ${activeClass}`} 
       data-testid={`kpi-${label.toLowerCase().replace(/\s/g, "-")}`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-[0.12em] font-bold text-zinc-400">{label}</div>
-        <Icon className={`w-4 h-4 ${accent || "text-zinc-400"}`} />
+        <div className="text-[10px] uppercase tracking-[0.12em] font-bold text-zinc-400 truncate pr-1">{label}</div>
+        <Icon className={`w-4 h-4 shrink-0 ${accent || "text-zinc-400"}`} />
       </div>
-      <div className="font-display text-3xl font-bold text-zinc-950 tracking-tight">{value}</div>
-      {sub && <div className="text-xs text-zinc-500 font-medium">{sub}</div>}
+      <div className="font-display text-2xl md:text-3xl font-bold text-zinc-950 tracking-tight truncate">{value}</div>
+      {sub && <div className="text-[11px] md:text-xs text-zinc-500 font-medium truncate">{sub}</div>}
       
       {sparkData && sparkData.length > 0 && (
-        <div className="h-8 mt-1 w-full opacity-70">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-6 md:h-8 mt-1 w-full opacity-70 overflow-hidden">
+          <ResponsiveContainer width="100%" height={32}>
             <AreaChart data={sparkData} margin={{ top: 0, bottom: 0, left: 0, right: 0 }}>
               <defs>
                 <linearGradient id={`grad-${label}`} x1="0" y1="0" x2="0" y2="1">
@@ -633,9 +633,9 @@ export default function Dashboard() {
     <>
       <Topbar title="Dashboard Ejecutivo" subtitle="Vista general de la cartera, alertas y rendimiento comercial" />
 
-      <div className="p-6 md:p-8 anim-fadeup">
+      <div className="p-4 md:p-8 anim-fadeup pb-20 md:pb-8">
         {/* KPI Strip */}
-        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6 md:mb-8">
           <KpiCard 
             label="Clientes" 
             value={localStats.total} 
