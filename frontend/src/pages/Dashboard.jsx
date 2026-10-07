@@ -36,6 +36,10 @@ const TARIFF_PIE_COLORS = [
   "#ef4444", // Red
   "#71717a", // Zinc
 ];
+
+const LUZ_TARIFFS = ["2.0TD", "3.0TD", "6.1TD"];
+const GAS_TARIFFS = ["RL1", "RL2", "RL3", "RL4"];
+
 function KpiCard({ label, value, sub, icon: Icon, accent, highlight, active, onClick, sparkData, dataKey, lineColor }) {
   const activeClass = active 
     ? "ring-2 ring-[#ff5722] scale-[1.02] shadow-[0_8px_30px_rgba(255,87,34,0.15)] border-[#ff5722]"
@@ -145,8 +149,48 @@ function formatKWh(val) {
   return `${val.toLocaleString("es-ES")} kWh`;
 }
 
-const LUZ_TARIFFS = ["2.0TD", "3.0TD", "6.1TD"];
-const GAS_TARIFFS = ["RL1", "RL2", "RL3", "RL4"];
+const REQUIRED_COMERCIALIZADORAS = [
+  "Unielectrica",
+  "Gana Energia",
+  "Naturgy",
+  "Endesa",
+  "Enerplus",
+  "Repsol",
+  "Nordy",
+  "Octopus",
+  "Plenitude",
+  "Niba",
+  "Axpo",
+  "Total Energies",
+  "Visalia",
+  "Iner",
+  "Ignis",
+  "Met",
+  "Imagina"
+];
+
+function normalizeComercializadoraName(name) {
+  if (!name) return "";
+  const n = String(name).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u06ff]/g, "");
+  if (n.includes("uni")) return "Unielectrica";
+  if (n.includes("gana")) return "Gana Energia";
+  if (n.includes("naturgy")) return "Naturgy";
+  if (n.includes("endesa")) return "Endesa";
+  if (n.includes("enerplus")) return "Enerplus";
+  if (n.includes("repsol")) return "Repsol";
+  if (n.includes("nordy") || n.includes("nordex")) return "Nordy";
+  if (n.includes("octopus")) return "Octopus";
+  if (n.includes("plenitude")) return "Plenitude";
+  if (n.includes("niba")) return "Niba";
+  if (n.includes("axpo")) return "Axpo";
+  if (n.includes("total")) return "Total Energies";
+  if (n.includes("visalia")) return "Visalia";
+  if (n.includes("iner")) return "Iner";
+  if (n.includes("ignis")) return "Ignis";
+  if (n.includes("met")) return "Met";
+  if (n.includes("imagina")) return "Imagina";
+  return String(name).trim();
+}
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -159,7 +203,7 @@ export default function Dashboard() {
   const [comercialFilter, setComercialFilter] = useState("all");
   const [activeKpiFilter, setActiveKpiFilter] = useState("all");
   const [rightCardTab, setRightCardTab] = useState("captaciones");
-  const [mainChartTab, setMainChartTab] = useState("pipeline");
+  const [mainChartTab, setMainChartTab] = useState("mensual");
 
   const loadDashboardData = () => {
     api.get("/dashboard/stats").then((r) => setStats(r.data)).catch(() => {});
@@ -408,24 +452,61 @@ export default function Dashboard() {
     });
   }, [filteredClients, filteredContracts]);
 
-  // Market share of contracts by utility company (Donut chart data)
-  const comercializadoraStats = useMemo(() => {
-    const counts = {};
-    filteredContracts.forEach(c => {
-      const name = c.comercializadora || "Desconocida";
-      counts[name] = (counts[name] || 0) + 1;
+  // 1. Control de contratos mensuales hechos y activos (Gráfico de barras)
+  const monthlyContractsData = useMemo(() => {
+    const monthsMap = {};
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const monthName = d.toLocaleDateString("es-ES", { month: "short" });
+      const label = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+      monthsMap[key] = { name: label, Contratos: 0, Activos: 0 };
+    }
+
+    filteredContracts.forEach(contract => {
+      const client = clientsMap[contract.cliente_id];
+      const dateStr = contract.fecha_inicio || contract.created_at || (client ? client.created_at : "");
+      if (!dateStr) return;
+      const key = dateStr.substring(0, 7);
+      if (monthsMap[key]) {
+        monthsMap[key].Contratos++;
+        if (contract.estado === "cliente_activo" || (client && client.estado === "cliente_activo")) {
+          monthsMap[key].Activos++;
+        }
+      }
     });
-    const total = filteredContracts.length;
-    return Object.entries(counts)
-      .map(([name, count], idx) => ({
-        name,
-        value: count,
-        percentage: total > 0 ? ((count / total) * 100).toFixed(1) : 0,
-        color: TARIFF_PIE_COLORS[idx % TARIFF_PIE_COLORS.length]
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6);
-  }, [filteredContracts]);
+
+    return Object.values(monthsMap);
+  }, [filteredContracts, clientsMap]);
+
+  // 2. Contratos de clientes activos por comercializadora (Sin porcentajes)
+  const comercializadoraActiveStats = useMemo(() => {
+    const counts = {};
+    REQUIRED_COMERCIALIZADORAS.forEach(name => {
+      counts[name] = 0;
+    });
+
+    filteredContracts.forEach(c => {
+      const client = clientsMap[c.cliente_id];
+      const isActive = c.estado === "cliente_activo" || (client && client.estado === "cliente_activo");
+      if (!isActive) return;
+
+      const rawName = c.comercializadora_actual || c.comercializadora || (client ? client.comercializadora : "");
+      const normalized = normalizeComercializadoraName(rawName);
+
+      if (counts[normalized] !== undefined) {
+        counts[normalized]++;
+      } else if (normalized) {
+        counts[normalized] = (counts[normalized] || 0) + 1;
+      }
+    });
+
+    return REQUIRED_COMERCIALIZADORAS.map(name => ({
+      name,
+      count: counts[name] || 0
+    }));
+  }, [filteredContracts, clientsMap]);
 
   // Local pipeline distribution chart data (contracts based)
   const chartData = useMemo(() => {
@@ -450,10 +531,13 @@ export default function Dashboard() {
   const revenueChartData = useMemo(() => {
     return displayClients
       .filter(c => (Number(c.comision) || 0) > 0)
-      .map(c => ({
-        name: c.nombre.length > 15 ? c.nombre.slice(0, 12) + "..." : c.nombre,
-        Ingresos: Number(c.comision) || 0,
-      }))
+      .map(c => {
+        const nombre = c.nombre || "Cliente";
+        return {
+          name: nombre.length > 15 ? nombre.slice(0, 12) + "..." : nombre,
+          Ingresos: Number(c.comision) || 0,
+        };
+      })
       .sort((a, b) => b.Ingresos - a.Ingresos)
       .slice(0, 10);
   }, [displayClients]);
@@ -798,32 +882,44 @@ export default function Dashboard() {
         </div>
         {/* Charts & Market Share Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Left: Pipeline & Revenue Analysis Tabbed Widget */}
+          {/* Left: Monthly Contracts, Pipeline & Revenue Analysis Tabbed Widget */}
           <div className="bg-gradient-to-b from-white to-zinc-50/40 border border-zinc-200/80 rounded-[1.5rem] p-5 flex flex-col gap-3 shadow-sm lg:col-span-2">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-100 pb-3 mb-2 gap-3">
               <div>
                 <h3 className="font-display text-sm font-semibold text-zinc-950 tracking-tight flex items-center gap-1.5">
-                  {mainChartTab === "pipeline" ? (
+                  {mainChartTab === "mensual" && (
+                    <><TrendingUp className="w-4.5 h-4.5 text-[#ff5722]" /> Control de Contratos Mensuales</>
+                  )}
+                  {mainChartTab === "pipeline" && (
                     <><Activity className="w-4.5 h-4.5 text-[#ff5722]" /> Distribución Pipeline</>
-                  ) : (
+                  )}
+                  {mainChartTab === "ingresos" && (
                     <><Coins className="w-4.5 h-4.5 text-emerald-500" /> Ingresos por Cliente (Top 10)</>
                   )}
                 </h3>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  {mainChartTab === "pipeline" ? "Distribución en tiempo real de contratos por estado" : "Comisiones totales acumuladas por cliente"}
+                  {mainChartTab === "mensual" && "Evolución de contratos realizados y activos por mes"}
+                  {mainChartTab === "pipeline" && "Distribución en tiempo real de contratos por estado"}
+                  {mainChartTab === "ingresos" && "Comisiones totales acumuladas por cliente"}
                 </p>
               </div>
               
-              <div className="flex bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/50 shrink-0">
+              <div className="flex bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/50 shrink-0 self-start sm:self-auto">
+                <button 
+                  onClick={() => setMainChartTab("mensual")} 
+                  className={`text-[9px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-md transition-all cursor-pointer ${mainChartTab === "mensual" ? "bg-[#ff5722] text-white shadow-sm font-extrabold" : "text-zinc-500 hover:text-zinc-800"}`}
+                >
+                  Mensual
+                </button>
                 <button 
                   onClick={() => setMainChartTab("pipeline")} 
-                  className={`text-[9px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-md transition-all cursor-pointer ${mainChartTab === "pipeline" ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-800"}`}
+                  className={`text-[9px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-md transition-all cursor-pointer ${mainChartTab === "pipeline" ? "bg-[#ff5722] text-white shadow-sm font-extrabold" : "text-zinc-500 hover:text-zinc-800"}`}
                 >
                   Pipeline
                 </button>
                 <button 
                   onClick={() => setMainChartTab("ingresos")} 
-                  className={`text-[9px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-md transition-all cursor-pointer ${mainChartTab === "ingresos" ? "bg-white text-zinc-950 shadow-sm" : "text-zinc-500 hover:text-zinc-800"}`}
+                  className={`text-[9px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-md transition-all cursor-pointer ${mainChartTab === "ingresos" ? "bg-[#ff5722] text-white shadow-sm font-extrabold" : "text-zinc-500 hover:text-zinc-800"}`}
                 >
                   Ingresos
                 </button>
@@ -831,7 +927,29 @@ export default function Dashboard() {
             </div>
 
             <div className="h-72 flex-1">
-              {mainChartTab === "pipeline" ? (
+              {mainChartTab === "mensual" ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyContractsData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="monthlyTotalGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#ff5722" stopOpacity={1}/>
+                        <stop offset="100%" stopColor="#ff7043" stopOpacity={0.75}/>
+                      </linearGradient>
+                      <linearGradient id="monthlyActiveGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity={1}/>
+                        <stop offset="100%" stopColor="#059669" stopOpacity={0.75}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="#f1f1f4" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 9, fill: "#71717a", fontWeight: 600 }} interval={0} />
+                    <YAxis tick={{ fontSize: 9, fill: "#71717a", fontWeight: 600 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ fontSize: 11, border: "1px solid #e4e4e7", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }} />
+                    <Legend wrapperStyle={{ fontSize: 10, paddingTop: 4 }} />
+                    <Bar dataKey="Contratos" name="Total Realizados" fill="url(#monthlyTotalGradient)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Activos" name="Contratos Activos" fill="url(#monthlyActiveGradient)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : mainChartTab === "pipeline" ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 45 }}>
                     <CartesianGrid stroke="#e4e4e7" vertical={false} />
@@ -873,71 +991,34 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Right: Comercializadora Share */}
+          {/* Right: Contratos por Comercializadora (Clientes Activos) */}
           <div className="bg-gradient-to-b from-white to-zinc-50/40 border border-zinc-200/80 rounded-[1.5rem] p-5 flex flex-col gap-3 shadow-sm lg:col-span-1">
-            <div>
-              <h3 className="font-display text-sm font-semibold text-zinc-950 tracking-tight flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-indigo-500" /> Cuota de Comercializadoras
-              </h3>
-              <p className="text-xs text-zinc-500">Reparto porcentual de contratos activos por compañía</p>
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <div>
+                <h3 className="font-display text-sm font-semibold text-zinc-950 tracking-tight flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 text-[#ff5722]" /> Contratos por Comercializadora
+                </h3>
+                <p className="text-xs text-zinc-500 mt-0.5">Contratos de clientes activos por compañía</p>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full bg-orange-50 text-[#ff5722] border border-orange-200/60 shrink-0">
+                Activos
+              </span>
             </div>
             
-            <div className="flex-1 flex flex-col justify-center min-h-[220px]">
-              {comercializadoraStats.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-xs text-zinc-400 gap-2">
-                  <Building2 className="w-8 h-8 text-zinc-300" />
-                  Sin contratos en esta selección
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                  <div className="h-44 flex justify-center items-center relative">
-                    {/* Centered Total */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-400">Total</span>
-                      <span className="text-xl font-display font-bold text-zinc-950">{filteredContracts.length}</span>
-                    </div>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={comercializadoraStats}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={45}
-                          outerRadius={65}
-                          paddingAngle={3}
-                          dataKey="value"
-                        >
-                          {comercializadoraStats.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(val) => [`${val} contratos`, 'Volumen']}
-                          contentStyle={{ fontSize: 11, border: "1px solid #e4e4e7", borderRadius: 6 }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+            <div className="flex-1 max-h-[300px] overflow-y-auto pr-1 space-y-1.5 custom-scrollbar">
+              {comercializadoraActiveStats.map((item) => (
+                <div key={item.name} className="flex items-center justify-between px-3 py-2 border border-zinc-200/70 rounded-xl bg-white hover:bg-orange-50/30 hover:border-orange-200 transition-all duration-150">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${item.count > 0 ? "bg-[#ff5722]" : "bg-zinc-300"}`} />
+                    <span className="font-bold text-xs text-zinc-850 truncate" title={item.name}>
+                      {item.name}
+                    </span>
                   </div>
-                  <div className="space-y-2 max-h-[170px] overflow-y-auto pr-1">
-                    {comercializadoraStats.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between text-[11px] gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span 
-                            className="w-2 h-2 rounded-full shrink-0" 
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span className="font-bold text-zinc-700 truncate" title={item.name}>
-                            {item.name}
-                          </span>
-                        </div>
-                        <span className="font-sans text-zinc-950 font-bold shrink-0">
-                          {item.percentage}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <span className={`font-mono text-xs font-extrabold px-2 py-0.5 rounded-lg border ${item.count > 0 ? "bg-orange-500 text-white border-orange-500 shadow-xs" : "bg-zinc-100 text-zinc-400 border-zinc-200"}`}>
+                    {item.count} {item.count === 1 ? "contrato" : "contratos"}
+                  </span>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
